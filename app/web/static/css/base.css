@@ -1,0 +1,1525 @@
+  /* Brand tokens: indigo-blue accent, matched to the
+     Investment WTS mockup's active-tab/brand color (#3644B0) — --up/--down
+     stay KRX-convention red/blue — market semantics never take the brand
+     color. --accent keeps its name so every existing component
+     (chips, links, modal toggles) inherits the rebrand without edits. */
+  :root {
+    --page:        #f7f7fb;
+    --surface:     #ffffff;
+    --surface-2:   #f1f0f7;
+    --ink:         #17151f;
+    --ink-2:       #4c4a58;
+    /* 2026-08-18: 라이트 --muted/--good/--amber/--up/--down 전부 실측 결과
+       --surface-2(가장 어두운 라이트 배경) 기준 WCAG AA(4.5:1) 미달이었음 —
+       hue/saturation은 그대로 두고 lightness만 낮춰서(그래서 --up/--down의
+       KRX 적/청 정체성은 그대로) 전부 4.5:1 이상 확보. wash 알파값은 그대로,
+       rgb triple만 새 hex를 따라감. 다크모드는 이미 통과라 손대지 않음. */
+    --muted:       #6d6a79;   /* was #8b8896 — page 4.93 / surface 5.27 / surface-2 4.65 */
+    --grid:        #e5e3ee;
+    --border:      rgba(23,21,31,0.10);
+    --up:          #c01e1d;   /* gain — red, matches KOSPI/KOSDAQ convention. was #e34948 — page 5.70 / surface 6.10 / surface-2 5.38 */
+    --up-wash:     rgba(192,30,29,0.10);
+    --down:        #2364b4;   /* loss — blue. was #2a78d6 — page 5.53 / surface 5.91 / surface-2 5.22 */
+    --down-wash:   rgba(35,100,180,0.10);
+    --accent:      #3644b0;
+    --accent-wash: rgba(54,68,176,0.10);
+    --hero-grad:   linear-gradient(120deg, #4c5fd1 0%, #3644b0 45%, #2a3690 100%);
+    --hero-ink:    #ffffff;
+    --hero-ink-2:  rgba(255,255,255,0.72);
+    --amber:       #835807;   /* revenue-vs-earnings chart's second series — deliberately not up/down (no gain/loss polarity here). was #b5790a — page 5.84 / surface 6.24 / surface-2 5.51 */
+    --amber-wash:  rgba(131,88,7,0.14); --amber-ink: #ffffff;   /* --amber를 단색 배경으로 쓸 때 얹는 고정 잉크 — 라이트는 흰색(새 --amber #835807 위에서 6.24:1), 다크는 아래 다크 블록에서 #17151f(다크 --amber #e0ad4d 위에서 8.81:1) — 어느 쪽이든 #fff/#17151f를 서로 바꿔 쓰면 AA 미달이라 테마별로 고정값이 다름 */
+    --good:        #087208;   /* was #0ca30c — page 5.74 / surface 6.14 / surface-2 5.42 */
+    --good-wash:   rgba(8,114,8,0.12);
+    --shadow:      0 1px 2px rgba(23,21,31,0.05), 0 10px 28px rgba(54,68,176,0.10);
+
+    /* geometry/typography scales -- not theme-dependent, so unlike the color
+       tokens above these live once here rather than duplicated per theme. */
+    --z-base: 1;
+    --z-header: 20;             /* .topbar (sticky header row) */
+    --z-dropdown: 50;           /* .modal-backdrop */
+    --z-sticky-banner: 900;     /* .real-limits-banner */
+    --z-overlay: 1000;          /* .toast-stack, .onboard-overlay */
+    --z-search-results: 1100;   /* .header-search-results */
+    --z-fill-modal: 1200;       /* .trade-fill-modal */
+    --z-dialog: 1300;           /* .app-dialog-backdrop */
+    --radius-2xs: 2px; --radius-xs: 3px; --radius-sm: 4px; --radius-sm2: 5px; --radius-md: 6px;
+    --radius-md2: 7px; --radius-lg: 8px; --radius-lg2: 9px; --radius-xl: 10px; --radius-2xl: 12px;
+    --radius-2xl2: 13px; --radius-3xl: 14px; --radius-4xl: 16px; --radius-5xl: 18px;
+    --fs-062: 0.62rem; --fs-064: 0.64rem; --fs-066: 0.66rem; --fs-068: 0.68rem; --fs-070: 0.7rem;
+    --fs-072: 0.72rem; --fs-074: 0.74rem; --fs-076: 0.76rem; --fs-078: 0.78rem; --fs-080: 0.8rem;
+    --fs-082: 0.82rem; --fs-083: 0.83rem; --fs-084: 0.84rem; --fs-085: 0.85rem; --fs-086: 0.86rem;
+    --fs-088: 0.88rem; --fs-090: 0.9rem; --fs-092: 0.92rem; --fs-095: 0.95rem; --fs-098: 0.98rem;
+    --fs-100: 1rem; --fs-102: 1.02rem; --fs-105: 1.05rem; --fs-110: 1.1rem; --fs-112: 1.12rem;
+    --fs-115: 1.15rem; --fs-125: 1.25rem; --fs-140: 1.4rem; --fs-145: 1.45rem; --fs-170: 1.7rem;
+    --fs-190: 1.9rem;
+    --fs-10px: 10px; --fs-105px: 10.5px; --fs-11px: 11px; --fs-115px: 11.5px; --fs-12px: 12px;
+    --fs-125px: 12.5px; --fs-13px: 13px; --fs-145px: 14.5px; --fs-15px: 15px;
+    --space-010: 0.1rem; --space-015: 0.15rem; --space-020: 0.2rem; --space-025: 0.25rem; --space-030: 0.3rem;
+    --space-035: 0.35rem; --space-040: 0.4rem; --space-045: 0.45rem; --space-050: 0.5rem; --space-055: 0.55rem;
+    --space-060: 0.6rem; --space-065: 0.65rem; --space-070: 0.7rem; --space-075: 0.75rem; --space-080: 0.8rem;
+    --space-085: 0.85rem; --space-090: 0.9rem; --space-100: 1rem; --space-110: 1.1rem; --space-115: 1.15rem;
+    --space-120: 1.2rem; --space-125: 1.25rem; --space-150: 1.5rem; --space-175: 1.75rem; --space-200: 2rem;
+    --space-225: 2.25rem; --space-250: 2.5rem; --space-450: 4.5rem;
+    --space-2px: 2px; --space-3px: 3px; --space-5px: 5px; --space-6px: 6px; --space-7px: 7px;
+    --space-8px: 8px; --space-9px: 9px; --space-10px: 10px; --space-14px: 14px; --space-15px: 15px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0e0d13; --surface: #17151f; --surface-2: #1f1c2a;
+      --ink: #f4f3f8; --ink-2: #b9b6c6; --muted: #837f91; --grid: #2a2738;
+      --border: rgba(244,243,248,0.10);
+      --up: #e66767; --up-wash: rgba(230,103,103,0.12);
+      --down: #3987e5; --down-wash: rgba(57,135,229,0.12);
+      --accent: #818cf8; --accent-wash: rgba(129,140,248,0.14);
+      --hero-grad: linear-gradient(120deg, #3644b0 0%, #2a3690 55%, #1f2870 100%);
+      --hero-ink: #ffffff; --hero-ink-2: rgba(255,255,255,0.72);
+      --amber: #e0ad4d; --amber-wash: rgba(224,173,77,0.16); --amber-ink: #17151f;
+      --good: #21b821; --good-wash: rgba(33,184,33,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 28px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #0e0d13; --surface: #17151f; --surface-2: #1f1c2a;
+    --ink: #f4f3f8; --ink-2: #b9b6c6; --muted: #837f91; --grid: #2a2738;
+    --border: rgba(244,243,248,0.10);
+    --up: #e66767; --up-wash: rgba(230,103,103,0.12);
+    --down: #3987e5; --down-wash: rgba(57,135,229,0.12);
+    --accent: #818cf8; --accent-wash: rgba(129,140,248,0.14);
+    --hero-grad: linear-gradient(120deg, #3644b0 0%, #2a3690 55%, #1f2870 100%);
+    --hero-ink: #ffffff; --hero-ink-2: rgba(255,255,255,0.72);
+    --amber: #e0ad4d; --amber-wash: rgba(224,173,77,0.16); --amber-ink: #17151f;
+    --good: #21b821; --good-wash: rgba(33,184,33,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 28px rgba(0,0,0,0.4);
+  }
+  :root[data-theme="light"] {
+    --page: #f7f7fb; --surface: #ffffff; --surface-2: #f1f0f7;
+    --ink: #17151f; --ink-2: #4c4a58; --muted: #6d6a79; --grid: #e5e3ee;
+    --border: rgba(23,21,31,0.10);
+    --up: #c01e1d; --up-wash: rgba(192,30,29,0.10);
+    --down: #2364b4; --down-wash: rgba(35,100,180,0.10);
+    --accent: #3644b0; --accent-wash: rgba(54,68,176,0.10);
+    --hero-grad: linear-gradient(120deg, #4c5fd1 0%, #3644b0 45%, #2a3690 100%);
+    --hero-ink: #ffffff; --hero-ink-2: rgba(255,255,255,0.72);
+    --amber: #835807; --amber-wash: rgba(131,88,7,0.14); --amber-ink: #ffffff;
+    --good: #087208; --good-wash: rgba(8,114,8,0.12);
+    --shadow: 0 1px 2px rgba(23,21,31,0.05), 0 10px 28px rgba(54,68,176,0.10);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page); color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+
+  /* ---------------- header-derived controls (헤더 폐지, 2026-08-19: 이 컨트롤들은
+     이제 사이드바 .sidebar-utility 안에서 단독으로 쓰임) ----------------
+     2026-08-19 시각통일: 이 블록의 계정모드/장중 배지는 각자의 옛(헤더 시절)
+     테두리-필 모양을 버리고 .sidebar-tab/.sidebar-row와 같은 전폭 행 모양을
+     직접 낸다 — JS가 className 전체를 덮어써서(예: 'market-status-pill open')
+     .sidebar-row 클래스를 붙일 수 없기 때문에 여기서 동일한 값을 하드코딩.
+     알림벨/언어/테마는 이제 .sidebar-row(위 정의)를 그대로 쓰므로 여기선
+     그 안의 하위요소(아이콘 크기, 트레일링 정렬, 조용한 hover)만 남긴다. */
+  .account-mode-pill, .market-status-pill {
+    display: flex; align-items: center; gap: var(--space-050); width: 100%; box-sizing: border-box;
+    padding: 0.6rem 0.8rem; border-radius: var(--radius-xl);
+    font-size: var(--fs-086); font-weight: 600; color: var(--muted); white-space: nowrap; flex-shrink: 0;
+  }
+  .account-mode-pill .dot { width: 7px; height: 7px; border-radius: var(--radius-sm); background: var(--muted); flex-shrink: 0; }
+  .account-mode-pill.real .dot { background: var(--down); }
+  .market-status-pill .dot { width: 7px; height: 7px; border-radius: var(--radius-sm); background: var(--muted); flex-shrink: 0; }
+  /* 장중(open) 상태 강조는 dot에만 — 전폭 행 배경(--good-wash)을 쓰면 사이드바에서
+     가장 큰 색 면적이 되어 활성 탭(.sidebar-tab.active)보다 시선을 끌어버려서
+     "포인트컬러는 아껴서 하나만" 원칙을 깬다. text color는 상태 신호로 남긴다. */
+  .market-status-pill.open { color: var(--good); }
+  .market-status-pill.open .dot { background: var(--good); animation: pulse-dot 2s ease-in-out infinite; }
+  /* .notif-btn은 이제 HTML에서 .sidebar-row도 같이 붙임(전폭/패딩/hover는 거기서
+     담당) — 여기 남은 건 버튼 리셋 + 아이콘/뱃지 정렬뿐. */
+  .notif-btn { cursor: pointer; text-align: left; }
+  .notif-dot { margin-left: auto; width: 6px; height: 6px; border-radius: var(--radius-xs); background: var(--accent); flex-shrink: 0; }
+  .live-pill { display: inline-flex; align-items: center; gap: var(--space-045); font-size: var(--fs-080); color: var(--ink-2); }
+  /* 언어 토글: 옛 테두리 필 모양을 버리고 조용한 인라인 텍스트 토글로 —
+     경계는 이제 부모 .sidebar-row가 담당. 트레일링 정렬은 margin-left:auto. */
+  .lang-switch { display: inline-flex; gap: var(--space-2px); flex-shrink: 0; margin-left: auto; }
+  .lang-switch .lang-btn {
+    height: 26px; padding: 0 8px; border: none; border-radius: var(--radius-md); background: transparent;
+    color: var(--muted); font: inherit; font-size: var(--fs-084); font-weight: 700; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .lang-switch .lang-btn.active { background: var(--surface-2); color: var(--ink); }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 0 var(--good); animation: pulse 2s infinite; }
+  .live-dot.off { background: var(--muted); animation: none; }
+  /* color-mix로 --good을 직접 참조(2026-08-18 이전엔 라이트 --good의 옛 rgb를
+     하드코딩해서 다크모드에서도 그 값 그대로였음 + 라이트 --good이 바뀌어도
+     안 따라감 — 이 파일의 기존 color-mix 관례(.order-mode-badge.dry 등)와
+     동일하게 고쳐서 두 문제 다 해결). */
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 50%, transparent); }
+    70%  { box-shadow: 0 0 0 6px color-mix(in srgb, var(--good) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 0%, transparent); }
+  }
+
+  /* ---------------- market pulse strip (header stat cluster) ---------------- */
+  .pulse-strip {
+    display: flex; align-items: center; gap: var(--space-15px); flex-wrap: nowrap; flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .pulse-item { display: flex; flex-direction: column; line-height: 1.15; }
+  .pulse-item .pulse-label { font-size: var(--fs-10px); color: var(--muted); font-weight: 600; letter-spacing: 0.3px; white-space: nowrap; }
+  .pulse-item .pulse-value { font-size: var(--fs-125px); font-weight: 600; white-space: nowrap; color: var(--ink); }
+  .pulse-item .pulse-chg { font-size: var(--fs-11px); font-weight: 600; }
+  .pulse-item.up .pulse-chg { color: var(--up); }
+  .pulse-item.down .pulse-chg { color: var(--down); }
+  .pulse-item.flat .pulse-chg { color: var(--muted); }
+
+  /* ---------------- market overview widget (Toss-증권 style, 2026-08-19) ---------------- */
+  .market-widget {
+    display: flex; flex-wrap: wrap; gap: var(--space-080);
+    margin: 0 0 var(--space-225);
+  }
+  .market-widget[hidden] { display: none; }
+  .mw-card {
+    flex: 1 1 160px; min-width: 140px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl);
+    padding: var(--space-080) var(--space-090);
+  }
+  .mw-name { font-size: var(--fs-074); color: var(--muted); font-weight: 600; }
+  .mw-value { font-size: var(--fs-105); font-weight: 700; margin-top: var(--space-020); font-variant-numeric: tabular-nums; }
+  .mw-change { font-size: var(--fs-080); font-weight: 600; margin-top: var(--space-015); }
+  .mw-change.up { color: var(--up); }
+  .mw-change.down { color: var(--down); }
+  .mw-spark { width: 100%; height: 32px; display: block; margin-top: var(--space-060); }
+
+  /* 헤더 폐지(2026-08-19)로 .topbar/.header-search/.header-exec-label 전용
+     좁은화면 대응 미디어쿼리 2건 삭제 — 대상 요소가 더 이상 DOM에 없음.
+     .pulse-strip 자체 규칙은 남겨둠(market-bar는 DOM에서만 제거, JS/엔드포인트는
+     향후 재사용 위해 보존 — renderIndexBar의 null 가드 참고). */
+
+  h2.section-title { font-size: var(--fs-078); font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 0.85rem; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-100); margin-bottom: var(--space-225); }
+
+  /* ---------------- trade allowlist card ---------------- */
+  .card {
+    position: relative;
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--grid);
+    border-radius: var(--radius-xl); padding: 1.1rem 1.2rem 1rem;
+    transition: border-left-color 0.2s, box-shadow 0.15s, transform 0.15s;
+  }
+  .card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .card.up   { border-left-color: var(--up); }
+  .card.down { border-left-color: var(--down); }
+  .card.flat { border-left-color: var(--grid); }
+
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-050); margin-bottom: var(--space-070); padding-right: var(--space-450); }
+  .card-head .name { font-size: var(--fs-088); font-weight: 600; line-height: 1.25; }
+  .card-head .symbol { font-size: var(--fs-074); color: var(--muted); display: flex; align-items: center; gap: var(--space-040); flex-wrap: wrap; margin-top: var(--space-015); }
+
+  /* auto_trade_loop "analyzing now" cards — one per ticker in this cycle,
+     content swapped in place (queued -> analyzing -> resolved) rather than
+     removed+replaced, so it doesn't visually jump. SEMI_AUTO/FULL_AUTO
+     only (hidden whenever /api/auto-trade/status reports enabled=false). */
+  .signal-section[hidden] { display: none; }
+  .signal-dashboard-head { margin: 0.2rem 0 1.4rem; }
+
+  /* ---------------- AI 시그널 landing hero (2026-08-18) ----------------
+     Light and typographic on purpose — no background panel, this sits directly
+     on .wrap, not inside a .card/.panel. Execution mode/account mode/market-open
+     deliberately excluded: all three are already permanent sidebar fixtures
+     (.sidebar-utility, moved out of the header 2026-08-19), and repeating them
+     here works against the "answer 3 questions, nothing more" goal that
+     motivated this section. */
+  .desk-hero-title { font-size: var(--fs-145); font-weight: 750; margin: 0; color: var(--ink); }
+  .desk-hero-tagline { font-size: var(--fs-092); color: var(--ink-2); margin: 0.3rem 0 0; }
+  .desk-hero-chain {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-040);
+    list-style: none; margin: 0.75rem 0 0; padding: 0;
+  }
+  .desk-hero-chain li {
+    font-size: var(--fs-078); color: var(--ink-2); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.7rem;
+    white-space: nowrap;
+  }
+  /* 화살표는 마크업/i18n 문자열이 아니라 순수 장식(CSS content)으로만 — 4단계
+     체인이 순서를 갖는 흐름임을 보여주되, 번역 문자열엔 화살표가 섞이지 않게. */
+  .desk-hero-chain li + li::before { content: '→'; margin-right: var(--space-040); color: var(--muted); }
+  .signal-dashboard-sub { font-size: var(--fs-085); color: var(--muted); margin-top: var(--space-050); font-variant-numeric: tabular-nums; }
+  /* 승인대기 CTA — 진짜 버튼(장식 아님), 확인이 필요한 대기 상태라 앰버.
+     반드시 --amber/--amber-wash 토큰만 사용(하드코딩 앰버는 다크모드에서 깨짐 —
+     이 파일의 #b58900 하드코딩 7곳은 2026-08-18에 전부 토큰으로 정리됨). */
+  .desk-hero-pending {
+    display: inline-flex; align-items: center; margin-top: var(--space-075);
+    font: inherit; font-size: var(--fs-085); font-weight: 650; cursor: pointer;
+    color: var(--amber); background: var(--amber-wash); border: 1px solid var(--amber);
+    border-radius: 999px; padding: 0.45rem 0.95rem;
+  }
+  .desk-hero-pending:hover { filter: brightness(1.05); }
+  .desk-hero-pending[hidden] { display: none; }
+  .signal-section-head {
+    display: flex; align-items: center; gap: var(--space-060); justify-content: flex-start;
+    margin-bottom: var(--space-075);
+  }
+  .signal-section-head .signal-reanalyze-btn { margin-left: auto; }
+  .signal-section-hint { font-size: var(--fs-078); color: var(--muted); }
+  .signal-reanalyze-btn {
+    font-size: var(--fs-082); font-weight: 650; padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface);
+    color: var(--accent); cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .signal-reanalyze-btn:hover:not(:disabled) { border-color: var(--accent); }
+  .signal-reanalyze-btn:disabled { color: var(--muted); cursor: default; opacity: 0.7; }
+  /* Horizontal, not a wrapping grid: this accumulates every ticker ever
+     analyzed (not just this cycle's), newest-first left-to-right, so it
+     only ever grows — a grid would keep reflowing height as that list
+     grows; a scrollable row keeps the section's height fixed instead. */
+  .signal-cards {
+    display: flex; gap: var(--space-100); margin: 0 0 1.6rem;
+    overflow-x: auto; padding-bottom: var(--space-040);
+  }
+  /* 수동 분석 그룹 — 같은 가로 스크롤 행을 재사용하되 자동 그룹 아래에 쌓임.
+     .has-manual-group는 두 행이 같이 보일 때 위 행의 1.6rem 하단 여백을
+     줄여서 두 행이 한 덩어리로 읽히게 함(JS가 토글). */
+  .signal-cards.has-manual-group { margin-bottom: var(--space-060); }
+  .signal-manual-group[hidden] { display: none; }
+  .signal-group-head {
+    display: flex; align-items: baseline; gap: var(--space-060);
+    margin-bottom: var(--space-050);
+  }
+  .signal-group-title { font-size: var(--fs-082); font-weight: 650; color: var(--ink-2); }
+  .signal-group-hint { font-size: var(--fs-074); color: var(--muted); }
+  .signal-card {
+    flex: 0 0 260px; min-width: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-3xl);
+    padding: 1.1rem 1.2rem; box-shadow: var(--shadow);
+  }
+  .signal-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-050); }
+  .signal-card-id { display: flex; align-items: center; gap: var(--space-065); min-width: 0; }
+  .signal-card-id-text { flex: 1; min-width: 0; }
+  .signal-avatar {
+    width: 2.1rem; height: 2.1rem; border-radius: 999px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: var(--fs-082); font-weight: 700;
+  }
+  .signal-card-id .name { font-size: var(--fs-092); font-weight: 650; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .signal-card-id .symbol { font-size: var(--fs-074); color: var(--muted); margin-top: var(--space-010); }
+  .signal-rating-pill {
+    font-size: var(--fs-076); font-weight: 700; padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-lg); white-space: nowrap;
+  }
+  .signal-rating-pill.buy, .signal-rating-pill.overweight { color: var(--up); background: var(--up-wash); }
+  .signal-rating-pill.sell, .signal-rating-pill.underweight { color: var(--down); background: var(--down-wash); }
+  .signal-rating-pill.hold { color: var(--amber); background: var(--amber-wash); }
+  /* --ink-2 (not --muted) — now only ever shown for the 7% genuinely-
+     informative mismatch case (see signals.js's _ratingDiffersFromAction),
+     so it deserves to read as more than decoration. */
+  .signal-rating-hint { font-size: var(--fs-066); color: var(--ink-2, var(--muted)); white-space: nowrap; }
+  /* Provenance chip, not a status: a human asked for this specific ticker
+     rather than the scheduled auto-trade cycle producing it. Deliberately
+     neutral (--surface-2/--ink-2, same recipe as .venue-chip.paper) — an
+     accent-tinted chip would read as "better/urgent", which is the exact
+     misreading Stage 1-2 removed from the accuracy screen's stats. */
+  .signal-manual-badge {
+    display: inline-block; font-size: var(--fs-062); font-weight: 700; letter-spacing: 0.02em;
+    color: var(--ink-2); background: var(--surface-2);
+    padding: 0.14rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .signal-status-badge {
+    display: inline-flex; align-items: center; gap: var(--space-035);
+    font-size: var(--fs-076); color: var(--muted); white-space: nowrap;
+  }
+  .signal-status-badge .dot { width: 0.45rem; height: 0.45rem; border-radius: 999px; background: var(--accent); animation: pulse-dot 1.2s ease-in-out infinite; }
+  .signal-execution-note {
+    font-size: var(--fs-076); color: var(--ink-2, var(--muted)); opacity: 0.85;
+    margin-top: var(--space-075); line-height: 1.4;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  }
+  .signal-card .reason {
+    font-size: var(--fs-083); color: var(--ink-2, var(--muted)); margin-top: var(--space-075); line-height: 1.45;
+    /* 3, not 2: content is now the purpose-built 1-2 sentence card_reason_*
+       field (still falls back to the longer Executive-Summary-derived line
+       for pre-existing rows), so a legitimate 2-sentence reason needs the
+       extra line rather than getting clipped — this clamp is now just a
+       safety net, not the primary length control. */
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  }
+  .signal-card-stats { display: flex; gap: var(--space-120); margin-top: var(--space-085); padding-top: var(--space-075); border-top: 1px solid var(--border); }
+  .signal-card-stat-label { display: block; font-size: var(--fs-070); color: var(--muted); }
+  .signal-card-stat-value { display: block; font-size: var(--fs-086); font-weight: 700; margin-top: var(--space-010); font-variant-numeric: tabular-nums; }
+  /* Display-only LLM token-usage total (app.memory.db's total_tokens
+     column) — small and muted so it reads as a cost footnote, not a stat
+     that competes with confidence/price target above. Block-level and
+     left-aligned by default (no flex needed) so it sits at the card's
+     bottom-left, under the stats row when present. */
+  .signal-card-tokens { font-size: var(--fs-066); color: var(--muted); margin-top: var(--space-050); font-variant-numeric: tabular-nums; }
+
+  /* Lives next to the symbol, not in the top-right corner — that corner is
+     the top-mover badge's alone, so the two never compete for the same
+     sliver of space on cards that have both. */
+  .market-status {
+    font-size: var(--fs-062); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    padding: 0.15rem 0.45rem; border-radius: 999px; white-space: nowrap;
+  }
+  .market-status.open { color: var(--good); background: var(--good-wash); }
+  .market-status.closed { color: var(--muted); background: var(--surface-2); }
+  .market-status.halted { color: #fff; background: var(--down); font-weight: 700; }
+
+  .price-row { display: flex; align-items: baseline; gap: var(--space-055); margin-bottom: var(--space-065); }
+  .price { font-size: var(--fs-170); font-weight: 650; letter-spacing: -0.01em; transition: color 0.5s ease-out; }
+  .price.stale { font-size: var(--fs-095); color: var(--muted); font-weight: 500; }
+  .price.flash-up { color: var(--up); }
+  .price.flash-down { color: var(--down); }
+  .delta { font-size: var(--fs-082); font-weight: 650; padding: 0.15rem 0.5rem; border-radius: var(--radius-sm2); white-space: nowrap; }
+  .delta.up { color: var(--up); background: var(--up-wash); }
+  .delta.down { color: var(--down); background: var(--down-wash); }
+  .delta.flat { color: var(--muted); background: var(--surface-2); }
+
+  canvas.chart { width: 100%; height: 108px; display: block; cursor: crosshair; }
+  .chart-wrap { position: relative; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-050);
+    margin-top: var(--space-085); padding-top: var(--space-075); border-top: 1px solid var(--border);
+  }
+  .stat { display: flex; flex-direction: column; gap: var(--space-015); }
+  .stat-label { font-size: var(--fs-066); text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .stat-value { font-size: var(--fs-082); font-weight: 600; }
+
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-125); align-items: start; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 1.1rem 1.2rem; }
+  #detail-modal-empty { color: var(--muted); font-size: var(--fs-085); }
+
+  #alerts .alert { display: flex; gap: var(--space-060); padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: var(--fs-085); }
+  #alerts .alert:last-child { border-bottom: none; }
+  #alerts .alert .dot { width: 7px; height: 7px; border-radius: 50%; margin-top: var(--space-045); flex-shrink: 0; }
+  #alerts .alert .dot.up { background: var(--up); }
+  #alerts .alert .dot.down { background: var(--down); }
+  #alerts .alert .dot.accent { background: var(--accent); }
+  #alerts .alert .kind-chip {
+    font-size: var(--fs-062); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); margin-right: var(--space-040);
+  }
+  #alerts .alert .ticker { font-weight: 650; }
+  #alerts .alert .meta { color: var(--muted); font-size: var(--fs-074); margin-top: var(--space-015); }
+  #alerts .empty { color: var(--muted); font-size: var(--fs-084); }
+
+  /* ---------------- portfolio table ---------------- */
+  /* ---------------- account tiles (KIS paper account) ---------------- */
+  .account-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-100); margin-bottom: var(--space-225); }
+  .account-tile {
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--grid);
+    border-radius: var(--radius-xl); padding: 1rem 1.2rem;
+  }
+  .account-tile.up { border-left-color: var(--up); }
+  .account-tile.down { border-left-color: var(--down); }
+  .account-tile .tile-label { font-size: var(--fs-072); color: var(--muted); margin-bottom: var(--space-040); }
+  .account-tile .tile-value { font-size: var(--fs-145); font-weight: 650; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .account-tile .tile-sub { font-size: var(--fs-076); color: var(--ink-2); margin-top: var(--space-030); font-variant-numeric: tabular-nums; }
+  .account-tile .tile-sub.up { color: var(--up); font-weight: 650; }
+  .account-tile .tile-sub.down { color: var(--down); font-weight: 650; }
+
+  .portfolio-table { width: 100%; border-collapse: collapse; font-size: var(--fs-085); }
+  .portfolio-table th {
+    text-align: left; font-size: var(--fs-066); text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); padding-bottom: var(--space-055); border-bottom: 1px solid var(--border);
+  }
+  .portfolio-table td { padding: 0.55rem 0.6rem 0.55rem 0; border-bottom: 1px solid var(--border); }
+  .portfolio-table tr:last-child td { border-bottom: none; }
+  .portfolio-table td.num, .portfolio-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .portfolio-table .sym { color: var(--muted); font-size: var(--fs-078); }
+  .portfolio-table .pnl-up { color: var(--up); font-weight: 650; }
+  .portfolio-table .pnl-down { color: var(--down); font-weight: 650; }
+  .portfolio-table th.sortable { user-select: none; padding: 0; }
+  /* th 안의 실제 클릭/포커스 대상. 버튼을 쓰는 이유는 Enter/Space를 브라우저가
+     알아서 click으로 바꿔주기 때문 — 별도 keydown 핸들러가 필요 없다.
+     UA 기본 스타일(회색 배경/테두리/가운데정렬/자체 폰트)을 전부 걷어내
+     기존 th와 픽셀 단위로 같아 보이게 만든다. text-align: inherit 가 핵심 —
+     이게 없으면 .num 열의 우측정렬이 버튼의 기본 center 에 먹힌다. */
+  .portfolio-table th.sortable .th-sort-btn {
+    display: block; width: 100%; background: none; border: 0; border-radius: var(--radius-sm);
+    padding: 0 0 0.55rem; margin: 0; cursor: pointer;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+    color: inherit; text-align: inherit;
+  }
+  .portfolio-table th.sortable .th-sort-btn:hover { color: var(--ink); }
+  .portfolio-table th.sortable .th-sort-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .portfolio-table th .sort-ind { display: inline-block; width: 0.9em; margin-left: 0.15em; opacity: 0.6; }
+  /* 매매손익표의 총손익(비용 차감 전) 칸 — 같은 행의 순손익이 실제 결과라,
+     둘을 같은 무게로 두면 어느 쪽을 봐야 하는지가 흐려진다. 색은 안 쓰고 눌러만 둠. */
+  .portfolio-table td.pnl-gross { color: var(--muted); font-weight: 500; }
+  .portfolio-table tr.pnl-row-up { background: var(--up-wash); }
+  .portfolio-table tr.pnl-row-down { background: var(--down-wash); }
+  .portfolio-table tr.portfolio-total td { border-top: 1px solid var(--border); border-bottom: none; font-weight: 650; }
+  .venue-chip {
+    display: inline-block; font-size: var(--fs-066); font-weight: 700; letter-spacing: 0.02em;
+    padding: 0.14rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .venue-chip.kis { color: var(--good); background: var(--good-wash); }
+  /* 실전계좌 주문 — 헤더의 .seg-badge.real / .kis-pill.real 과 같은 토큰을 써서
+     "실전" 표식이 화면 전체에서 한 색으로 움직이게 한다. 칩이 표 셀 안에 들어가
+     있어 .seg-badge.real 의 box-shadow 링은 생략(줄 높이가 튄다). */
+  .venue-chip.kis.real { color: #fff; background: var(--down); font-weight: 800; }
+  .venue-chip.paper { color: var(--ink-2); background: var(--surface-2); }
+
+  /* ---------------- recent trades ---------------- */
+  .side-chip {
+    display: inline-block; font-size: var(--fs-066); font-weight: 700; letter-spacing: 0.02em;
+    padding: 0.14rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .side-chip.buy { color: var(--up); background: var(--up-wash); }
+  .side-chip.sell { color: var(--down); background: var(--down-wash); }
+  .trade-reason {
+    max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: var(--ink-2); font-size: var(--fs-078);
+  }
+  #trades-body .empty { padding: 0.5rem 0; }
+
+  .hold-badge {
+    display: none; font-size: var(--fs-062); font-weight: 700; letter-spacing: 0.03em;
+    color: var(--accent); background: var(--accent-wash);
+    padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .decision-order { display: inline-flex; gap: var(--space-035); align-items: center; }
+
+  /* 손절가 셀 — 가격 아래에 현재가 대비 거리(%). 근접/이탈은 안전 관련 신호라
+     하드코딩 색 대신 --amber/--down 토큰만 사용(다크모드에서 같이 따라감). */
+  .stop-cell { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
+  .stop-dist { font-size: var(--fs-074); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stop-cell.stop-near .stop-dist { color: var(--amber); font-weight: 650; }
+  .stop-cell.stop-breached .stop-dist { color: var(--down); font-weight: 700; }
+
+  .kis-pill {
+    display: none; align-items: center; gap: var(--space-040);
+    font-size: var(--fs-078); font-weight: 650; color: var(--good);
+    background: var(--good-wash); border-radius: 999px; padding: 0.28rem 0.75rem;
+    white-space: nowrap;
+  }
+  /* Real-account mode — deliberately loud (red, bold) so it's never
+     mistaken for the paper-mode pill at a glance; real money moves here. */
+  .kis-pill.real {
+    color: #fff; background: var(--down, #d1352b);
+    font-weight: 800; box-shadow: 0 0 0 2px rgba(209,53,43,0.35);
+  }
+  /* execution_mode badge — always visible in the header so "which mode am
+     I in right now" never requires opening a tab. Escalating visual weight
+     manual -> semi_auto -> full_auto matches how much less human
+     confirmation each one needs before an order goes out. */
+  .exec-mode-pill {
+    display: inline-flex; align-items: center; gap: var(--space-035);
+    font-size: var(--fs-078); font-weight: 650;
+    border-radius: 999px; padding: 0.28rem 0.75rem; white-space: nowrap;
+  }
+  .exec-mode-pill.manual { color: var(--muted); background: var(--surface-2); }
+  .exec-mode-pill.semi_auto { color: var(--amber); background: var(--amber-wash); border: 1px solid color-mix(in srgb, var(--amber) 33%, transparent); }
+  .exec-mode-pill.full_auto {
+    color: #fff; background: var(--down, #d1352b);
+    font-weight: 800; box-shadow: 0 0 0 2px rgba(209,53,43,0.35);
+  }
+  /* auto_trade_loop visibility — so "is it actually running" never
+     requires watching a terminal. Hidden entirely when the loop isn't
+     enabled (MANUAL mode or auto_trade_enabled off), same convention as
+     exec-mode-pill's own hidden-when-N/A behavior. */
+  .auto-trade-pill {
+    display: inline-flex; align-items: center; gap: var(--space-040);
+    font-size: var(--fs-078); font-weight: 650;
+    border-radius: 999px; padding: 0.28rem 0.75rem; white-space: nowrap;
+  }
+  .auto-trade-pill .dot {
+    width: 0.5rem; height: 0.5rem; border-radius: 999px; background: currentColor;
+  }
+  .auto-trade-pill.idle { color: var(--muted); background: var(--surface-2); }
+  .auto-trade-pill.scanning, .auto-trade-pill.analyzing {
+    color: var(--accent); background: var(--accent-wash);
+  }
+  .auto-trade-pill.analyzing .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+  .status-chip {
+    display: inline-block; font-size: var(--fs-066); font-weight: 700; letter-spacing: 0.02em;
+    padding: 0.14rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .status-chip.filled { color: var(--good); background: var(--good-wash); }
+  .status-chip.recorded { color: var(--ink-2); background: var(--surface-2); }
+  .status-chip.partial { color: var(--amber); background: var(--amber-wash); }
+  .status-chip.pending { color: var(--muted); background: var(--surface-2); }
+
+  /* ---------------- decision history ---------------- */
+  #decisions .decision-row { padding: 0.65rem 0; border-bottom: 1px solid var(--border); font-size: var(--fs-085); cursor: pointer; }
+  #decisions .decision-row:last-child { border-bottom: none; }
+  #decisions .decision-row:hover { background: var(--surface-2); }
+  /* 2026-07-30: generalized from "#decisions .decision-row .row-top" —
+     pendingOrderCardHtml/pendingHistoryRowHtml (기타탭 승인대기) reuse this
+     same .row-top class but aren't nested under .decision-row, so they were
+     silently getting no flex layout at all (one visible source of the
+     기타탭 4개 섹션 간 스타일 불일치). Same rule, just not scoped to one caller. */
+  .row-top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-050); }
+  #decisions .decision-row .meta { color: var(--muted); font-size: var(--fs-076); margin-top: var(--space-020); }
+  .rating-chip {
+    font-size: var(--fs-066); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .rating-chip.buy, .rating-chip.overweight { color: var(--up); background: var(--up-wash); }
+  .rating-chip.sell, .rating-chip.underweight { color: var(--down); background: var(--down-wash); }
+  .rating-chip.hold { color: var(--muted); background: var(--surface-2); }
+
+  /* ---------------- shared: agent-transcript viewer ---------------- */
+  .see-more { color: var(--accent); cursor: pointer; font-size: var(--fs-084); font-weight: 600; }
+  .transcript { margin-top: var(--space-075); padding: 0.9rem 1rem; background: var(--surface-2); border-radius: var(--radius-lg); font-size: var(--fs-083); }
+  .transcript h4 {
+    font-size: var(--fs-070); text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    margin: 1.1rem 0 0.5rem;
+  }
+  .transcript h4:first-child { margin-top: 0; }
+  .transcript .turn { margin-bottom: var(--space-070); padding-left: var(--space-065); border-left: 2px solid var(--border); }
+  .transcript .turn:last-child { margin-bottom: 0; }
+  .transcript .turn .speaker { font-weight: 700; display: block; margin-bottom: var(--space-020); }
+  .transcript p { margin: 0 0 0.5em; }
+  .transcript p:last-child { margin-bottom: 0; }
+
+  #chat-log { height: 280px; overflow-y: auto; font-size: var(--fs-088); margin-bottom: var(--space-075); padding-right: var(--space-025); }
+  #chat-log .msg { display: flex; margin-bottom: var(--space-065); }
+  #chat-log .msg.user { justify-content: flex-end; }
+  #chat-log .bubble { max-width: 85%; padding: 0.5rem 0.75rem; border-radius: var(--radius-2xl2); line-height: 1.45; }
+  #chat-log .msg.user .bubble { background: var(--accent-wash); color: var(--ink); border-bottom-right-radius: 4px; }
+  #chat-log .msg.bot .bubble { background: var(--surface-2); border-bottom-left-radius: 4px; }
+  #chat-log .msg.bot .bubble p { margin: 0 0 0.6em; }
+  #chat-log .msg.bot .bubble p:last-child { margin-bottom: 0; }
+  #chat-log .msg.thinking .bubble { color: var(--muted); font-style: italic; }
+  .chat-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-14px); text-align: center; padding: 0 8px; }
+  .chat-empty-title { font-size: var(--fs-102); font-weight: 650; color: var(--ink); }
+  .chat-suggest-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-8px); max-width: 420px; }
+  .chat-suggest-chip { border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 7px 13px; font-size: var(--fs-084); cursor: pointer; }
+  .chat-suggest-chip:hover { background: var(--accent-wash); border-color: var(--accent); }
+  .chat-composer { border: 1px solid var(--border); border-radius: var(--radius-5xl); background: var(--surface); padding: 13px 15px 9px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+  .chat-composer-input { display: block; width: 100%; border: none; background: transparent; outline: none; font: inherit; font-size: var(--fs-145px); color: var(--ink); padding: 3px 4px 13px; }
+  .chat-input-row { display: flex; align-items: center; gap: var(--space-6px); }
+  .chat-icon-btn { width: 32px; height: 32px; border-radius: var(--radius-lg2); border: none; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .chat-icon-btn:hover { background: var(--surface-2); }
+  .chat-model-badge { height: 32px; padding: 0 11px; border: 1px solid var(--border); background: transparent; border-radius: var(--radius-lg2); cursor: pointer; color: var(--muted); display: flex; align-items: center; gap: var(--space-6px); font-family: inherit; font-size: var(--fs-12px); font-weight: 600; }
+  .chat-model-badge-icon { color: var(--accent); }
+  .chat-spacer { flex: 1; }
+  .chat-send-hint { font-size: var(--fs-11px); color: var(--muted); font-family: ui-monospace, monospace; margin-right: var(--space-2px); }
+  .chat-send-btn { width: 32px; height: 32px; border-radius: var(--radius-4xl); background: var(--accent); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .chat-disclaimer { text-align: center; font-size: var(--fs-11px); color: var(--muted); margin-top: var(--space-9px); }
+  input, button {
+    font-family: inherit; font-size: var(--fs-088); padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-md2); border: 1px solid var(--border); background: var(--surface-2); color: var(--ink);
+  }
+  input { flex: 1; }
+  input:focus, button:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button { cursor: pointer; background: var(--accent); color: #fff; border: none; font-weight: 600; }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  /* ---------------- clickable card -> detail modal ---------------- */
+  .card { cursor: pointer; }
+  .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: var(--z-dropdown); align-items: center; justify-content: center; padding: var(--space-150);
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-3xl);
+    width: min(920px, 100%); max-height: 90vh; overflow-y: auto;
+    padding: 1.5rem 1.75rem 1.25rem; position: relative; box-shadow: var(--shadow);
+  }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1.1rem; background: transparent; border: none;
+    color: var(--muted); font-size: var(--fs-100); padding: 0.3rem 0.55rem; border-radius: var(--radius-md); font-weight: 600;
+  }
+  .modal-close:hover { color: var(--ink); opacity: 1; background: var(--surface-2); }
+  .modal-head {
+    display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-100);
+    margin-bottom: var(--space-115); padding-bottom: var(--space-100); padding-right: var(--space-250); border-bottom: 1px solid var(--border);
+  }
+  .modal-name { font-size: var(--fs-105); font-weight: 700; }
+  .modal-symbol { font-size: var(--fs-080); color: var(--muted); }
+  .modal-price-block { display: flex; align-items: baseline; gap: var(--space-060); }
+  .ai-diag-compact {
+    flex: 1 1 240px; min-width: 220px; max-width: 320px;
+    background: linear-gradient(140deg, var(--accent-wash), transparent);
+    border: 1px solid var(--accent-wash); border-radius: var(--radius-2xl); padding: 11px 14px;
+  }
+  .ai-diag-compact-head { display: flex; align-items: center; gap: var(--space-7px); margin-bottom: var(--space-5px); }
+  .ai-diag-compact-head svg { color: var(--accent); flex-shrink: 0; }
+  .ai-diag-compact-label { font-size: var(--fs-115px); font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .ai-diag-compact-pill { margin-left: auto; font-size: var(--fs-11px); font-weight: 700; padding: 2px 8px; border-radius: var(--radius-md2); white-space: nowrap; }
+  /* When the badge is shown, ITS left edge is what needs to absorb the row's
+     free space, not the pill's — .ai-diag-compact-head uses `gap`, so if both
+     had margin-left:auto the free space would split between them, opening an
+     unwanted gap between badge and pill instead of pushing the pair together
+     to the right. The adjacent-sibling override cancels the pill's own auto
+     margin only when the badge is actually visible right before it. */
+  .ai-diag-compact-manual:not([hidden]) { margin-left: auto; }
+  .ai-diag-compact-manual:not([hidden]) + .ai-diag-compact-pill { margin-left: 0; }
+  .ai-diag-compact-pill.buy, .ai-diag-compact-pill.overweight { color: var(--up); background: var(--up-wash); }
+  .ai-diag-compact-pill.sell, .ai-diag-compact-pill.underweight { color: var(--down); background: var(--down-wash); }
+  .ai-diag-compact-pill.hold { color: var(--amber); background: var(--amber-wash); }
+  .ai-diag-compact-rating-hint { font-size: var(--fs-105px); color: var(--muted); margin-bottom: var(--space-3px); }
+  .ai-diag-compact-reason { margin: 0; font-size: var(--fs-12px); line-height: 1.5; color: var(--ink-2); }
+  .modal-price { font-size: var(--fs-190); font-weight: 700; transition: color 0.5s ease-out; }
+  .modal-price.flash-up { color: var(--up); }
+  .modal-price.flash-down { color: var(--down); }
+  .pending-approval-order-line {
+    font-size: var(--fs-115); font-weight: 700; color: var(--ink); margin: 0.4rem 0 1rem;
+  }
+  .pending-approval-order-line .side-chip { font-size: var(--fs-100); }
+
+  .axis-y {
+    display: flex; flex-direction: column; justify-content: space-between;
+    width: 76px; padding: 6px 0; font-size: var(--fs-072); color: var(--muted);
+    text-align: right; flex-shrink: 0;
+  }
+  .axis-y span { white-space: nowrap; }
+  .axis-x { display: flex; justify-content: space-between; padding: 0.5rem 0 0 0; font-size: var(--fs-072); color: var(--muted); }
+  .axis-x span { white-space: nowrap; }
+  .fund-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    margin: 0.9rem -1.2rem -1.1rem; padding: 0.7rem 1.2rem; background: var(--surface-2);
+    border-top: 1px solid var(--border); border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  }
+  .fund-summary-cell { padding: 0 0.4rem; border-right: 1px solid var(--border); }
+  .fund-summary-cell:last-child { border-right: none; }
+  .fund-summary-label { font-size: var(--fs-068); font-weight: 600; color: var(--muted); margin-bottom: var(--space-015); }
+  .fund-summary-value { font-size: var(--fs-085); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fund-summary-value.up { color: var(--up); } .fund-summary-value.down { color: var(--down); }
+  @media (max-width: 640px) {
+    .axis-y { width: 62px; font-size: var(--fs-064); }
+    .axis-x { font-size: var(--fs-064); }
+  }
+
+  /* ---------------- earnings trends (inside the detail modal) ---------------- */
+  .detail-section-title {
+    font-size: var(--fs-078); font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); margin: 2rem 0 1rem; padding-top: var(--space-150); border-top: 1px solid var(--border);
+  }
+  /* 접히는 섹션(호가/실적추이/국내지표/뉴스)의 제목. <h3>일 때와 활자·간격이
+     같아 보이도록 위 .detail-section-title을 그대로 상속받고, 여기서는
+     "누를 수 있다"는 것만 더한다. 기본 삼각형 마커는 그대로 씀. */
+  summary.detail-section-title { cursor: pointer; }
+  summary.detail-section-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+  summary.detail-section-title::marker { color: var(--muted); }
+  .earnings-chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-060); }
+  .earnings-chart-label { font-size: var(--fs-085); font-weight: 600; }
+  .period-toggle { display: flex; border: 1px solid var(--border); border-radius: var(--radius-md2); overflow: hidden; }
+  .period-toggle button {
+    border: none; border-radius: 0; background: var(--surface-2); color: var(--ink-2);
+    font-size: var(--fs-076); font-weight: 600; padding: 0.3rem 0.7rem;
+  }
+  .period-toggle button.active { background: var(--accent); color: #fff; }
+  .eps-chart-wrap, .rev-chart-wrap { position: relative; display: flex; gap: var(--space-040); height: 200px; }
+  canvas.eps-chart, canvas.rev-chart { flex: 1 1 auto; min-width: 0; height: 100%; display: block; cursor: crosshair; }
+  .earnings-info-line { display: flex; align-items: baseline; gap: var(--space-125); margin-bottom: var(--space-060); font-size: var(--fs-078); color: var(--ink-2); }
+  .earnings-info-line .info-period { font-weight: 700; color: var(--ink); }
+  .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: var(--radius-2xs); margin-right: var(--space-040); }
+  .legend-dot.hollow { background: transparent; border: 2px solid var(--muted); }
+  .legend-dot.revenue { background: var(--accent); }
+  .legend-dot.earnings { background: var(--amber); }
+
+  /* auto-fit(뷰포트 폭이 아니라 실제 컨테이너 폭 기준) — 트레이딩 탭 3-col
+     전환 후 이 표가 들어앉는 중앙 컬럼 폭이 뷰포트에 따라 크게 달라져서
+     (1280뷰포트=370px, 1440=530px) 고정 640px 미디어쿼리로는 안 맞음. */
+  .estimate-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-150); margin-top: var(--space-175); }
+  .estimate-tables h4 { font-size: var(--fs-078); font-weight: 650; color: var(--muted); margin: 0 0 0.6rem; }
+  .estimate-table-wrap { overflow-x: auto; }
+  .estimate-table { width: 100%; border-collapse: collapse; font-size: var(--fs-078); }
+  .estimate-table th, .estimate-table td {
+    padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .estimate-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: var(--fs-070); text-transform: uppercase; letter-spacing: 0.03em; }
+  .estimate-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .estimate-table tr:last-child td { border-bottom: none; }
+
+  .news-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.75rem 1.5rem; }
+  @media (max-width: 640px) { .news-grid { grid-template-columns: 1fr; } }
+  /* #detail-news(트레이딩 탭 상세, 3-col 전환 후 폭이 좁고 가변적)만 기본 2단 고정을
+     깨고 컨테이너 폭 기준 auto-fit으로 접히도록 스코프 override. */
+  #detail-news { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .news-item {
+    display: flex; gap: var(--space-075); padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+  }
+  .news-grid .news-item:nth-last-child(-n+2) { border-bottom: none; }
+  @media (max-width: 640px) { .news-grid .news-item:last-child { border-bottom: none; } }
+  .news-item:not(.news-item-static):hover .news-title { color: var(--accent); }
+  .news-item-text { flex: 1; min-width: 0; }
+  .news-title { font-size: var(--fs-084); font-weight: 600; line-height: 1.35; margin-bottom: var(--space-030); }
+  .news-meta { font-size: var(--fs-074); color: var(--muted); }
+  .news-thumb {
+    width: 72px; height: 72px; border-radius: var(--radius-lg); object-fit: cover; flex-shrink: 0; background: var(--surface-2);
+  }
+
+  /* ================= Redesign: hero / feed / compact rows / tabs ================= */
+
+  .hero {
+    background: var(--hero-grad); color: var(--hero-ink);
+    border-radius: var(--radius-4xl); padding: 1.5rem 1.7rem 1.4rem; margin: 1.1rem 0 1rem;
+    box-shadow: var(--shadow); position: relative; overflow: hidden;
+    display: flex; flex-wrap: wrap; gap: var(--space-250); align-items: flex-end;
+  }
+  .hero .label { font-size: var(--fs-078); color: var(--hero-ink-2); margin-bottom: var(--space-025); }
+  /* unified domestic/overseas account blocks */
+  .hero-accounts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-100); width: 100%; position: relative; }
+  .acct { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); border-radius: var(--radius-2xl); padding: 1.05rem 1.15rem; }
+  .acct-head { display: flex; align-items: center; gap: var(--space-050); margin-bottom: var(--space-060); }
+  .acct-head .scope { font-size: var(--fs-082); font-weight: 800; letter-spacing: 0.03em; color: var(--hero-ink); }
+  .acct .fx-toggle { font-size: var(--fs-072); font-weight: 700; color: #1a1a1a; background: #f2f2f4; border: 1px solid #d8d8dc; padding: 0.2rem 0.65rem; border-radius: 999px; cursor: pointer; margin-left: auto; }
+  .acct .fx-toggle:hover { background: #e6e6ea; }
+  .acct .total { font-size: var(--fs-170); font-weight: 750; letter-spacing: -0.01em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .acct .delta-pill {
+    display: inline-block; margin-top: var(--space-045); font-size: var(--fs-082); font-weight: 650;
+    background: rgba(255,255,255,0.16); border-radius: 999px; padding: 0.2rem 0.6rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero .sub { display: flex; gap: var(--space-200); flex-wrap: wrap; position: relative; }
+  .hero .sub .value { font-size: var(--fs-112); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .acct .total .cur { font-size: var(--fs-090); font-weight: 600; color: var(--hero-ink-2); }
+  .acct .acct-body-row { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-100); }
+  .acct .eval-line { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-040); }
+  .acct .eval-line .label {
+    margin-bottom: 0; background: rgba(255,255,255,0.14); border-radius: var(--radius-md);
+    padding: 0.18rem 0.55rem;
+  }
+  .acct .eval-line .value { font-size: var(--fs-170); font-weight: 750; font-variant-numeric: tabular-nums; }
+  .acct .mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-060); margin-top: var(--space-085); padding-top: var(--space-080); border-top: 1px solid rgba(255,255,255,0.16); }
+  .acct .mini .value { font-size: var(--fs-098); font-weight: 650; font-variant-numeric: tabular-nums; }
+  @media (max-width: 620px) { .hero-accounts { grid-template-columns: 1fr; } .acct .mini { grid-template-columns: repeat(2, 1fr); } }
+  /* header language + theme toggles */
+  .toast-stack { position: fixed; top: 1rem; right: 1rem; z-index: var(--z-overlay); display: flex; flex-direction: column; gap: var(--space-050); }
+  .toast { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-xl);
+           padding: 0.7rem 0.9rem; box-shadow: var(--shadow); font-size: var(--fs-085); min-width: 240px; animation: toast-in 0.25s ease; }
+  /* .order-result 와 같은 이유로 교정(2026-08-18) — 체결은 성공이라 --good,
+     거부는 실패라 --up(적). 이전에는 체결=적/거부=청이라 거부 토스트가 가장
+     차분한 색으로 뜨고 있었다. */
+  .toast.filled { border-left-color: var(--good); }
+  .toast.rejected { border-left-color: var(--up); }
+  .toast .t-title { font-weight: 700; margin-bottom: var(--space-015); }
+  .toast .t-sub { color: var(--muted); font-size: var(--fs-078); font-variant-numeric: tabular-nums; }
+  /* SEMI_AUTO's "please approve" card and FULL_AUTO's "AI just did this"
+     card — both live in the same toast-stack, distinguished by border color
+     (amber = needs your input, accent = just FYI) and by whether they
+     auto-dismiss (see showPendingOrderCard vs the plain showToast call in
+     pollDecisions). */
+  .toast.action { border-left-color: var(--amber); min-width: 280px; }
+  .toast.action .pending-actions { margin-top: var(--space-050); }
+  @keyframes toast-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+  /* 매매 체결 시 크게 띄우는 알림(2026-07-30) — 작은 toast-stack과 별개, 종목/가격/
+     AI 판단 이유를 눈에 띄게 보여주기 위한 전용 중앙 모달. */
+  .trade-fill-modal { position: fixed; inset: 0; z-index: var(--z-fill-modal); display: flex; align-items: center; justify-content: center; }
+  .trade-fill-modal[hidden] { display: none; }
+  .trade-fill-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); animation: tfm-fade-in 0.2s ease; }
+  .trade-fill-modal-card {
+    position: relative; z-index: var(--z-base); width: min(420px, 90vw); background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-4xl); box-shadow: var(--shadow);
+    padding: 1.6rem 1.6rem 1.4rem; text-align: center; animation: tfm-pop-in 0.25s ease;
+  }
+  .trade-fill-modal-close {
+    position: absolute; top: 0.7rem; right: 0.8rem; background: transparent; border: none;
+    color: var(--muted); font-size: var(--fs-110); cursor: pointer; line-height: 1; padding: var(--space-020);
+  }
+  .trade-fill-modal-close:hover { color: var(--ink); }
+  .tfm-badge {
+    display: inline-block; font-size: var(--fs-080); font-weight: 700; padding: 0.25rem 0.8rem;
+    border-radius: 999px; margin-bottom: var(--space-070); color: #fff;
+  }
+  .tfm-badge.buy { background: var(--up); }
+  .tfm-badge.sell { background: var(--down); }
+  .tfm-ticker-row { display: flex; align-items: baseline; justify-content: center; gap: var(--space-050); flex-wrap: wrap; }
+  .tfm-name { font-size: var(--fs-140); font-weight: 800; }
+  .tfm-symbol { font-size: var(--fs-085); color: var(--muted); }
+  .tfm-detail { margin-top: var(--space-040); font-size: var(--fs-105); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .tfm-reason-label { margin-top: var(--space-110); font-size: var(--fs-078); font-weight: 700; color: var(--muted); text-align: left; }
+  .tfm-reason-text {
+    margin-top: var(--space-035); font-size: var(--fs-086); line-height: 1.55; color: var(--ink); text-align: left;
+    max-height: 220px; overflow-y: auto; white-space: pre-wrap;
+  }
+  @keyframes tfm-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes tfm-pop-in { from { opacity: 0; transform: scale(0.94) translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .trade-fill-modal-backdrop, .trade-fill-modal-card { animation: none; } }
+  .market-bar { display: flex; gap: var(--space-150); align-items: center; padding: 0.5rem 1.1rem; margin: 0 auto;
+                max-width: 1200px; font-size: var(--fs-082); font-variant-numeric: tabular-nums; color: var(--muted);
+                border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .market-bar .idx { display: inline-flex; align-items: baseline; gap: var(--space-045); }
+  .market-bar .idx .nm { color: var(--ink-2); font-weight: 700; }
+  .market-bar .idx .val { color: var(--ink); font-weight: 700; }
+  .market-bar .idx .chg.up { color: var(--up); } .market-bar .idx .chg.down { color: var(--down); }
+  .market-bar .cb-warn { color: #fff; background: var(--down); font-weight: 700; padding: 0.1rem 0.5rem; border-radius: var(--radius-md); }
+  .rank-modes { display: flex; gap: var(--space-030); }
+  .rank-mode { font: inherit; font-size: var(--fs-078); padding: 0.3rem 0.7rem; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: var(--radius-md); cursor: pointer; }
+  .rank-mode.active { color: var(--accent); border-color: var(--accent); font-weight: 700; }
+  .rank-refresh:hover { border-color: var(--accent); }
+  #rank-table .rk-name { cursor: pointer; }
+  #rank-table .rk-name:hover { color: var(--accent); }
+  #rank-table .up { color: var(--up); } #rank-table .down { color: var(--down); }
+  #rank-table .rk-add { font: inherit; font-size: var(--fs-072); padding: 0.15rem 0.5rem; border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: var(--radius-sm2); cursor: pointer; }
+  .mc-labels { display: flex; gap: var(--space-120); font-size: var(--fs-078); color: var(--muted); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+  .mc-labels b { color: var(--ink); }
+  .mc-labels .mc-period { font-weight: 700; color: var(--ink); }
+  /* Base declaration — the height must stay unconditional and come BEFORE the
+     640px override right below (2026-08-18 fix): a duplicate at the old
+     "candlestick period chart" section used to declare this height: 220px
+     override earlier in source order, which meant the unconditional 260px
+     rule (equal specificity, later in the file) always won and the mobile
+     height never actually applied. Keep the override here, immediately
+     after this rule, so it isn't silently shadowed again. */
+  .period-chart { position: relative; display: flex; gap: var(--space-040); height: 260px; }
+  @media (max-width: 640px) { .period-chart { height: 220px; } }
+  .period-chart canvas { flex: 1 1 auto; min-width: 0; height: 100%; display: block; cursor: crosshair; }
+  .period-axis-y { padding: 0; }
+  @media (max-width: 620px) { .hero-accounts { grid-template-columns: 1fr; } .acct .mini { grid-template-columns: repeat(2, 1fr); } }
+
+  /* 2026-08-19 시각통일: 옛 테두리-버튼 모양을 버림 — 경계는 부모 .sidebar-row가
+     담당, 여기는 아이콘 전용 버튼 리셋 + 트레일링 정렬만. hover는 부모 행의
+     .sidebar-row:hover로 충분해서 개별 hover는 생략(같은 자리에 이중 hover
+     배경이 겹치지 않도록). */
+  .theme-toggle {
+    width: 28px; height: 28px; border-radius: var(--radius-lg); border: none;
+    background: none; color: var(--ink-2); cursor: pointer; flex-shrink: 0; margin-left: auto;
+    display: flex; align-items: center; justify-content: center; font-size: var(--fs-15px);
+  }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .cols { display: grid; grid-template-columns: 1.25fr 1fr; gap: var(--space-100); align-items: start; }
+  /* min-width:0 stops a wide table (the trades tab) from inflating its grid
+     column — the column widths must be identical no matter which tab is
+     active; anything wider scrolls inside its own panel instead. */
+  .cols > div { min-width: 0; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  .cols .panel + .panel, .cols .panel + .tabs { margin-top: var(--space-100); }
+
+  /* 2026-08-18: 섹션 제목이 본문(13.4~14.4px)보다 작고(11.84px) 흐려서(--muted)
+     위계가 뒤집혀 있던 것을 바로잡음. uppercase/넓은 자간은 영문 전용 장식인데
+     이 앱의 제목은 대부분 한글이라 효과가 없거나(대문자) 가독성을 깎아서(자간)
+     둘 다 제거. .hint는 부모가 커진 만큼 자기 크기를 명시해야 종속 관계가 유지됨. */
+  h2.sec {
+    font-size: var(--fs-092); font-weight: 700;
+    color: var(--ink-2); margin: 0 0 0.8rem; display: flex; align-items: center; gap: var(--space-050);
+  }
+  h2.sec .cnt { color: var(--accent); }
+  h2.sec .hint { font-size: var(--fs-082); color: var(--muted); font-weight: 500; }
+
+  /* border color matches .pending-row/.portfolio-table td's --border (was
+     --grid, a visibly different divider color/opacity — 기타탭 4개 섹션
+     통일성 정리, 2026-07-30). */
+  .feed-item { display: flex; gap: var(--space-085); padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: var(--space-045); flex-shrink: 0; }
+  .feed-dot.buy { background: var(--up); }
+  .feed-dot.sell { background: var(--down); }
+  .feed-dot.info { background: var(--muted); }
+  .feed-body { flex: 1; min-width: 0; }
+  .feed-head { display: flex; gap: var(--space-050); align-items: center; flex-wrap: wrap; font-size: var(--fs-084); }
+  .feed-head b { font-weight: 650; }
+  .feed-time { font-size: var(--fs-072); color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .feed-sub { font-size: var(--fs-078); color: var(--ink-2); margin-top: var(--space-025); line-height: 1.5; }
+
+  .crow { position: relative; display: flex; align-items: center; gap: var(--space-060); padding: 0.56rem 0.6rem; margin-bottom: var(--space-2px); cursor: pointer; border-radius: var(--radius-xl); }
+  .crow:hover { background: var(--surface); }
+  .crow.selected { background: var(--accent-wash); }
+  /* 키보드 포커스는 반드시 hover와 다르게 보여야 한다 — 예전엔 둘이 같은 규칙을
+     공유해서 "탭으로 지금 짚고 있는 행"과 "마우스가 우연히 얹힌 행"이 구별되지
+     않았다. 배경은 일부러 안 건드린다: .crow.selected 와 명시도가 같아서
+     여기서 배경을 지정하면 선택된 행에 포커스가 갈 때 선택 표시가 덮여 사라진다.
+     링만 얹으면 hover/selected/focus 세 상태가 서로를 가리지 않고 겹친다.
+     outline-offset 은 음수(인셋) — 이 행들은 overflow:auto 인 목록 안에 있고
+     행 간격이 2px 뿐이라, 바깥으로 나가는 링은 잘리거나 옆 행을 침범한다. */
+  .crow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .crow .nm { flex: 1; min-width: 0; }
+  .crow .nm .n { font-size: var(--fs-078); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crow .nm .s { font-size: var(--fs-066); color: var(--muted); display: flex; gap: var(--space-040); align-items: center; flex-wrap: wrap; margin-top: var(--space-010); font-variant-numeric: tabular-nums; }
+  .crow .nm .s .market-status { display: none; }  /* 목업엔 없는 배지 — "실시간" 서브탭 필터용 클래스만 유지, 화면엔 안 보임 */
+  .crow .px { text-align: right; }
+  .crow .px .p { font-size: var(--fs-078); font-weight: 700; font-variant-numeric: tabular-nums; transition: color 0.5s ease-out; }
+  .crow .px .p.stale { font-size: var(--fs-070); color: var(--muted); font-weight: 500; }
+  .crow .px .p.flash-up { color: var(--up); }
+  .crow .px .p.flash-down { color: var(--down); }
+  .crow .px .d { font-size: var(--fs-068); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .crow .px .d.up { color: var(--up); }
+  .crow .px .d.down { color: var(--down); }
+  .crow .px .d.flat { color: var(--muted); }
+  .crow .card-remove { flex-shrink: 0; opacity: 0; }
+  .crow:hover .card-remove, .crow:focus-within .card-remove { opacity: 1; }
+  .pnl-mini { font-size: var(--fs-072); font-variant-numeric: tabular-nums; }
+  .pnl-mini.up { color: var(--up); font-weight: 650; }
+  .pnl-mini.down { color: var(--down); font-weight: 650; }
+
+  /* Sidebar shell + top-level nav panels: 3 content tabs (nav-signals/
+     nav-trading/nav-assistant) + a visually-separated nav-settings entry
+     (see .sidebar-tab-settings below). */
+  .app-shell { display: flex; align-items: stretch; gap: 0; }
+  .sidebar-nav { display: flex; flex-direction: column; gap: var(--space-020); width: 200px; flex-shrink: 0; padding: 1rem 0.6rem; border-right: 1px solid var(--border); position: sticky; top: 0; max-height: 100vh; overflow-y: auto; transition: width 0.15s ease; }
+  /* main-col: 헤더(사이드바 접기/펼치기에 따라 너비가 같이 변함) + 탭 콘텐츠. */
+  .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .sidebar-collapse-btn {
+    display: flex; align-items: center; gap: var(--space-040); padding: 0.45rem 0.8rem; margin-bottom: var(--space-060);
+    border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface-2); color: var(--muted);
+    font-size: var(--fs-078); font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .sidebar-collapse-btn:hover { color: var(--ink); }
+  /* collapsed: icon-only rail — labels/badge/brand-text/account summary all
+     hide, tabs+collapse button center their icon instead of left-aligning. */
+  .sidebar-nav.collapsed { width: 60px; }
+  .sidebar-nav.collapsed .sidebar-brand-text,
+  .sidebar-nav.collapsed .sidebar-tab-label,
+  .sidebar-nav.collapsed .sidebar-tab-badge,
+  .sidebar-nav.collapsed .sidebar-collapse-label,
+  .sidebar-nav.collapsed .sidebar-acct-summary,
+  .sidebar-nav.collapsed .sidebar-utility { display: none; }
+  .sidebar-nav.collapsed .sidebar-tab,
+  .sidebar-nav.collapsed .sidebar-collapse-btn { justify-content: center; padding: var(--space-060); }
+  .sidebar-nav.collapsed .sidebar-brand { justify-content: center; padding: 0.2rem 0 1rem; }
+  .sidebar-brand { display: flex; align-items: center; gap: var(--space-055); padding: 0.2rem 0.8rem 1rem; }
+  .sidebar-brand-mark {
+    display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem;
+    border-radius: var(--radius-lg); background: var(--hero-grad); color: #fff; font-weight: 800; font-size: var(--fs-072); flex: none;
+  }
+  .sidebar-brand-name { font-size: var(--fs-088); font-weight: 700; line-height: 1.2; }
+  .sidebar-brand-sub { font-size: var(--fs-068); color: var(--muted); letter-spacing: 0.04em; margin-top: var(--space-010); }
+  .sidebar-tab {
+    text-align: left; padding: 0.6rem 0.8rem; border-radius: var(--radius-xl); font-size: var(--fs-086); font-weight: 600;
+    color: var(--muted); background: none; border: none; font-family: inherit;
+    display: flex; align-items: center; gap: var(--space-050);
+  }
+  .sidebar-tab.active { color: var(--accent); background: var(--accent-wash); }
+  /* 2026-08-19: .active 말고는 hover 피드백이 아예 없었음(사이드바 시각통일 작업
+     중 발견한 같은 종류의 불일치) — 아래 .sidebar-row와 같은 조용한 hover 언어로
+     맞춤. */
+  .sidebar-tab:hover:not(.active) { background: var(--surface-2); }
+  /* 설정은 나머지 3개 콘텐츠 탭과 동급이 아니라 "옆으로 분리된" 진입점으로 읽혀야
+     함(2026-08-18 IA 단순화) — margin-top:auto로 사이드바 하단(계좌 요약 바로 위)에
+     붙이고, 다른 탭들과 같은 구분선 스타일(border-top var(--border))로 시각 분리. */
+  .sidebar-tab-settings { margin-top: auto; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+  .sidebar-nav.collapsed .sidebar-tab-settings { padding-top: var(--space-060); }
+  /* 2026-08-18: 이모지/딩벳/수학기호 4종 혼용(✦/📈/💬/⋯) 대신 헤더 검색·알림벨과
+     같은 인라인 SVG 선(stroke) 스타일로 통일 — 사이드바는 어느 탭에 있든 항상
+     보이는 영역이라 아이콘 렌더링 방식이 섞이면 가장 눈에 띔. */
+  .sidebar-tab-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; }
+  .sidebar-tab-icon svg { width: 100%; height: 100%; }
+  .sidebar-tab-badge {
+    margin-left: auto; font-size: var(--fs-070); font-weight: 700; color: #fff; background: var(--accent);
+    border-radius: 999px; min-width: 1.1rem; height: 1.1rem; display: inline-flex; align-items: center;
+    justify-content: center; padding: 0 0.3rem;
+  }
+  .sidebar-acct-summary { margin-top: var(--space-060); padding: 0.7rem 0.8rem; border-top: 1px solid var(--border); }
+  .sidebar-acct-summary-head { display: flex; align-items: center; justify-content: space-between; }
+  .sidebar-acct-summary .label { font-size: var(--fs-076); color: var(--muted); }
+  .sidebar-acct-detail-link { background: none; border: none; color: var(--accent); font-size: var(--fs-076); font-weight: 600; cursor: pointer; padding: 0; font-family: inherit; }
+  .sidebar-acct-summary .total { font-size: var(--fs-105); font-weight: 700; margin-top: var(--space-015); font-variant-numeric: tabular-nums; }
+  .sidebar-acct-summary .pnl { font-size: var(--fs-080); margin-top: var(--space-010); font-variant-numeric: tabular-nums; }
+  .sidebar-acct-summary .pnl.up { color: var(--up); }
+  .sidebar-acct-summary .pnl.down { color: var(--down); }
+  /* 헤더 폐지(2026-08-19)로 옮겨온 유틸리티 묶음 — .sidebar-acct-summary와 같은
+     세로 리듬(위쪽 여백+구분선, 접었을 때 통째로 숨김)을 따름. */
+  .sidebar-utility {
+    /* gap을 .sidebar-nav 탭들의 리듬(space-020)에 맞춤(2026-08-19) — 행마다
+       이제 자체 세로 패딩(0.6rem, .sidebar-row/.account-mode-pill/
+       .market-status-pill)이 생겨서, 예전 space-060 gap까지 더하면 탭 목록보다
+       눈에 띄게 헐렁해 보였음. */
+    display: flex; flex-direction: column; gap: var(--space-020);
+    margin-top: var(--space-060); padding: 0.7rem 0.8rem; border-top: 1px solid var(--border);
+  }
+  .sidebar-utility-row { display: flex; align-items: center; gap: var(--space-060); }
+  /* 2026-08-19 사이드바 시각통일: .sidebar-utility 안의 모든 행(언어/테마/
+     매매모드/알림벨)이 이 한 모양을 공유 — .sidebar-tab과 정확히 같은 패딩·
+     반경·폰트·gap 리듬(위 .sidebar-tab 규칙과 짝을 이룸). 계정모드/장중 배지는
+     JS가 className 전체 문자열을 덮어써서(예: 'account-mode-pill real') 이
+     클래스를 붙일 수 없어 .account-mode-pill/.market-status-pill 쪽에서
+     동일한 모양을 직접 낸다(아래 참조). */
+  .sidebar-row {
+    width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-050);
+    padding: 0.6rem 0.8rem; border-radius: var(--radius-xl);
+    font-size: var(--fs-086); font-weight: 600; color: var(--muted);
+    background: none; border: none; font-family: inherit; text-align: left;
+  }
+  .sidebar-row:hover { background: var(--surface-2); }
+  .sidebar-mode-text { font-size: var(--fs-076); color: var(--muted); margin-left: auto; }
+  .nav-panels { flex: 1; min-width: 0; }
+  .nav-panel[hidden] { display: none; }
+  .nav-panel-placeholder { padding: var(--space-200); color: var(--muted); font-size: var(--fs-090); }
+
+  /* 트레이딩 tab: 3-col layout (관심종목 | 종목상세 | 주문). 2026-08-18 이전에는
+     상세와 주문표가 같은 우측 컬럼에 세로로 쌓여 있어서 주문 버튼이 1440x900
+     뷰포트의 폴드 아래(y≈1070)로 밀렸다 — "가격 보면서 주문"이 불가능했음.
+     주문을 독립 컬럼으로 빼고 sticky를 걸어, 상세를 아무리 스크롤해도 주문표가
+     화면에 남게 한다. 국내/해외 toggle은 헤더로 이동. */
+  .trading-layout { display: flex; flex-wrap: wrap; gap: var(--space-120); align-items: flex-start; margin-bottom: var(--space-120); }
+  .trading-trade-allowlist-col { flex: 0 0 250px; min-width: 0; }
+  /* min-width 400px: 캔들차트(Y축 76px 고정)가 뭉개지지 않는 하한. 이 값이
+     flex 하한으로 참여하기 때문에, 폭이 모자라면 중앙이 아니라 주문 컬럼이
+     먼저 줄어든다(주문 컬럼은 shrink 1). */
+  .trading-detail-col { flex: 1 1 0; min-width: 400px; }
+  /* align-self: stretch가 없으면 컬럼 높이가 콘텐츠 높이로 줄어 sticky가 움직일
+     트랙 자체가 사라진다 — 컨테이너의 align-items: flex-start는 관심종목 패널
+     때문에 유지해야 하므로 이 컬럼에만 개별 지정. */
+  .trading-order-col { flex: 0 1 320px; min-width: 280px; align-self: stretch; }
+  /* top 72px = sticky 상단바 56px + 16px. max-height는 미체결 주문이 많아
+     패널이 뷰포트보다 길어졌을 때 아래쪽이 영영 안 보이는 sticky 고질병 방지. */
+  .trading-order-panel { position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow-y: auto; }
+  /* 목업의 워치리스트 패널 — 자체 서브탭 영역(12px 12px 8px)과 스크롤되는 종목
+     리스트 영역(0 8px 8px)의 패딩이 서로 달라서, 균일 패딩인 .panel 대신 전용
+     클래스로 둠. */
+  .trade-allowlist-panel { display: flex; flex-direction: column; max-height: 720px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; }
+  .trade-allowlist-panel-head { padding: 0.7rem 0.7rem 0.4rem; }
+  .trade-allowlist-panel-rows { flex: 1; min-height: 0; overflow-y: auto; padding: 0 0.5rem 0.5rem; }
+  .trading-detail-empty { padding: 3rem 1rem; text-align: center; color: var(--muted); }
+  /* 1220px 미만에서는 3-col이 물리적으로 불가능(250+400+280+gap 38.4 = 968px가
+     최소인데, 미디어폭 1220일 때 가용 트랙이 933.6px). 주문표를 전폭 2행으로. */
+  @media (max-width: 1219px) {
+    .trading-detail-col { flex: 1 1 360px; min-width: 0; }
+    .trading-order-col { flex: 1 1 100%; align-self: auto; }
+    .trading-order-panel { position: static; max-height: none; overflow: visible; }
+  }
+  @media (max-width: 900px) {
+    .trading-layout { flex-direction: column; flex-wrap: nowrap; }
+    .trading-trade-allowlist-col { flex: none; width: 100%; }
+    .trading-detail-col { flex: none; width: 100%; }
+    .trading-order-col { flex: none; width: 100%; }
+  }
+
+  .tabs { display: flex; gap: var(--space-025); border-bottom: 1px solid var(--border); margin: 1.4rem 0 0.9rem; overflow-x: auto; }
+  .tab {
+    padding: 0.55rem 1rem; font-size: var(--fs-084); font-weight: 600; color: var(--muted);
+    border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel[hidden] { display: none; }
+  .order-mode-row { margin-bottom: var(--space-090); }
+  .order-mode-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 999px; font-size: var(--fs-080); font-weight: 600; border: 1px solid var(--border); }
+  .order-mode-badge.dry { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 33%, transparent); background: var(--amber-wash); }
+  .order-mode-badge.live { color: var(--down); border-color: var(--down); background: color-mix(in srgb, var(--down) 10%, transparent); }
+  .order-mode-badge.off { color: var(--muted); }
+  .order-side-toggle, .order-type-toggle { display: flex; gap: var(--space-040); margin-bottom: var(--space-080); }
+  .order-type-toggle .otype.active { color: var(--accent); border-color: var(--accent); }
+  .order-side-toggle .oside[data-side="buy"].active { color: #fff; background: var(--up); border-color: var(--up); }
+  .order-side-toggle .oside[data-side="sell"].active { color: #fff; background: var(--down); border-color: var(--down); }
+  .order-submit.side-buy { background: var(--up); }
+  .order-submit.side-sell { background: var(--down); }
+  .order-field { display: flex; align-items: center; gap: var(--space-075); margin-bottom: var(--space-075); }
+  .order-field > span { width: 64px; color: var(--muted); font-size: var(--fs-085); }
+  .order-avail { color: var(--muted); font-size: var(--fs-085); min-height: 1.2em; margin-bottom: var(--space-080); }
+  .rr-toggle { display: flex; align-items: center; gap: var(--space-050); margin: 0.9rem 0 0.6rem; font-size: var(--fs-090); cursor: pointer; }
+  .rr-toggle input { width: auto; flex: none; }
+  .safety-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 999px; font-size: var(--fs-080); font-weight: 600; border: 1px solid var(--border); }
+  /* 배지=상태, 버튼=액션이라 색 논리가 다르다.
+     배지: 안전상태=--good(녹) / 정지중=--up(적). --down(청)은 '가격 하락'
+     전용 토큰이라 상태의 좋고나쁨에 쓰면 안전한 상태가 빨강, 진짜 위험한
+     상태가 파랑으로 뒤집혀 보였음(.order-result 와 같은 성격의 버그).
+     .safety-badge.ok 는 일일손실 배지도 공유한다(trading.js pnlPct >= 0).
+     버튼: '누르면 무슨 일이 일어나는가' 기준. 긴급정지 발동은 파괴적 액션이라
+     .app-dialog-confirm.danger 와 같은 규격(투명 배경 + --up 외곽선)을 쓴다.
+     정지 해제는 --good 을 주지 않는다 — 실계좌 자동매매 재무장이라 '안전'이
+     아니고(코드도 confirmDialog danger:true 로 취급), 그렇다고 --up 이면
+     두 버튼이 같은 색이 된다. 그래서 .app-dialog-cancel 과 같은 중립색. */
+  .safety-badge.ok { color: var(--good); border-color: var(--good); }
+  .safety-badge.engaged { color: var(--up); border-color: var(--up); background: color-mix(in srgb, var(--up) 10%, transparent); }
+  .safety-badge.breached { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 33%, transparent); background: var(--amber-wash); }
+  .safety-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-060); margin: 0.5rem 0; }
+  .safety-kill-btn { width: 100%; padding: var(--space-070); border: 1px solid var(--up); border-radius: var(--radius-lg); background: transparent; color: var(--up); font-weight: 700; cursor: pointer; margin-top: var(--space-060); }
+  .safety-kill-btn.disengage { border-color: var(--border); color: var(--ink); }
+  .safety-kill-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .order-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .order-result { margin-top: var(--space-080); padding: 0.6rem 0.75rem; border-radius: var(--radius-lg); font-size: var(--fs-088); border: 1px solid var(--border); white-space: pre-wrap; }
+  /* 성공=녹색 / 실패=적색. --up(적)/--down(청)은 '가격 등락' 전용 토큰이라
+     결과 배너에 쓰면 성공이 빨강, 실패가 파랑으로 뒤집혀 보였음(2026-08-18).
+     같은 앱의 .status-chip.filled 가 이미 --good 을 쓰고 있어 그쪽에 맞춘다.
+     실패 색으로 --up 을 쓰는 건 .real-limits-banner 의 기존 선례와 동일 —
+     팔레트에 별도 danger 토큰이 없어서 적색이 --up 뿐이다. */
+  .order-result.ok { color: var(--good); border-color: var(--good); }
+  .order-result.bad { color: var(--up); border-color: var(--up); }
+
+  /* AI Profile / Trading Mode runtime toggle — Trading Environment stays a
+     plain read-only badge (no .seg-group), never clickable: switching
+     paper/real always requires a deliberate config-file edit, see
+     docs/safety-and-risk.md 5.1. */
+  .seg-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-075); margin: 0.7rem 0; }
+  .seg-row > span { color: var(--muted); font-size: var(--fs-085); white-space: nowrap; }
+  .seg-group { display: flex; flex-shrink: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  /* 사이드바 국내/해외 스코프 토글만 스코프 오버라이드(id 선택자라 설정탭의
+     #rt-ai-profile/#rt-execution-mode 공유 .seg-group/.seg-btn 규칙은 그대로
+     둔다, 2026-08-19 시각통일). 전폭 + .sidebar-tab과 같은 반경 var(--radius-xl)
+     + 새 행 리듬에 맞춘 높이만 여기서 덮어씀. */
+  #market-scope-toggle { width: 100%; border-radius: var(--radius-xl); }
+  #market-scope-toggle .seg-btn { padding: 0.6rem 0.7rem; font-size: var(--fs-086); }
+  .trade-allowlist-subtabs { width: 100%; margin: 0.6rem 0 0.8rem; }
+  .trade-allowlist-subtabs .seg-btn { flex: 1; }
+  .trade-allowlist-add-row { display: flex; gap: var(--space-040); margin-bottom: var(--space-060); }
+  .trade-allowlist-add-row input {
+    flex: 1; min-width: 0; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--surface); color: var(--ink); font-size: var(--fs-085); font-family: inherit;
+  }
+  .trade-allowlist-add-row button {
+    flex-shrink: 0; padding: 0.45rem 0.7rem; border: 1px solid var(--accent); border-radius: var(--radius-lg);
+    background: transparent; color: var(--accent); font-size: var(--fs-085); font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  /* 관심종목 검색 타입어헤드 (tickersearch.js) — .trade-allowlist-panel이
+     overflow:hidden 이라 패널 안 absolute 배치는 잘린다. JS가 이 노드를
+     document.body에 붙이고 position:fixed + getBoundingClientRect 로 띄운다.
+     z는 옛 헤더 검색이 쓰던 고아 토큰 재사용. 색은 전부 테마 토큰이라
+     다크모드 별도 대응 불필요. */
+  .ticker-search-pop {
+    position: fixed; z-index: var(--z-search-results); display: none;
+    min-width: 250px; max-width: 340px; max-height: 320px; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: var(--space-030);
+  }
+  .ticker-search-pop.open { display: block; }
+  .ticker-search-group {
+    font-size: var(--fs-070); color: var(--muted); font-weight: 650;
+    padding: var(--space-045) var(--space-055) var(--space-025);
+  }
+  .tsr {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: var(--space-045) var(--space-055); border-radius: var(--radius-md); cursor: pointer;
+  }
+  .tsr:hover, .tsr.active { background: var(--accent-wash); }
+  .tsr.blocked { opacity: 0.55; cursor: not-allowed; }
+  .tsr.blocked:hover { background: transparent; }
+  .tsr-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-040); }
+  .tsr-name {
+    font-size: var(--fs-085); color: var(--ink); font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tsr-badge {
+    flex-shrink: 0; font-size: var(--fs-064); color: var(--muted);
+    background: var(--surface-2); border-radius: 999px; padding: 1px 6px;
+  }
+  .tsr-sub {
+    display: flex; justify-content: space-between; gap: var(--space-040);
+    font-size: var(--fs-074); color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+  .tsr-sub .up { color: var(--up); }
+  .tsr-sub .down { color: var(--down); }
+  .tsr-note { font-size: var(--fs-070); color: var(--muted); }
+  .ticker-search-msg { padding: var(--space-070) var(--space-055); font-size: var(--fs-080); color: var(--muted); }
+  .ticker-search-msg .sub { font-size: var(--fs-074); margin-top: var(--space-020); }
+  .ticker-search-retry {
+    margin-top: var(--space-045); padding: 0.25rem 0.6rem;
+    border: 1px solid var(--accent); border-radius: var(--radius-md);
+    background: transparent; color: var(--accent); font-size: var(--fs-074); cursor: pointer; font-family: inherit;
+  }
+  .pnl-controls { display: flex; align-items: end; gap: var(--space-060); margin-bottom: var(--space-080); flex-wrap: wrap; }
+  .pnl-date-field { display: flex; flex-direction: column; gap: var(--space-020); font-size: var(--fs-080); color: var(--muted); }
+  .pnl-date-field input {
+    padding: 0.4rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--surface); color: var(--ink); font-size: var(--fs-085); font-family: inherit;
+  }
+  .pnl-controls button {
+    padding: 0.45rem 0.8rem; border: 1px solid var(--accent); border-radius: var(--radius-lg);
+    background: transparent; color: var(--accent); font-size: var(--fs-085); font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .pnl-summary, .accuracy-kpis { display: flex; gap: var(--space-150); margin-bottom: var(--space-100); }
+  .pnl-summary .label, .accuracy-kpis .label { font-size: var(--fs-080); color: var(--muted); }
+  .pnl-summary .value, .accuracy-kpis .value { font-size: var(--fs-110); font-weight: 700; }
+  /* 적중률 탭. .seg-btn 은 flex:1 이라 좁은 필터 그룹에서 과하게 늘어남 —
+     #market-scope-toggle 과 같은 방식으로 이 패널에서만 눌러 준다. */
+  .accuracy-filters { display: flex; align-items: center; gap: var(--space-060); margin-bottom: var(--space-080); flex-wrap: wrap; }
+  .accuracy-filters .seg-group { flex: none; }
+  .accuracy-filters .seg-btn { flex: none; padding: 0.4rem 0.7rem; font-size: var(--fs-082); }
+  .accuracy-filter-label { font-size: var(--fs-080); color: var(--muted); }
+  .accuracy-meta { display: flex; align-items: center; gap: var(--space-050); flex-wrap: wrap; font-size: var(--fs-080); color: var(--muted); margin-bottom: var(--space-080); }
+  .accuracy-footnote { font-size: var(--fs-080); color: var(--muted); line-height: 1.55; margin: var(--space-060) 0 0; }
+  /* .empty 는 전역 규칙이 없다(#alerts / #trades-body 에만 스코프됨) — 이 패널
+     것도 직접 준다. 지우면 빈 상태 문구가 본문 색·크기로 튀어 보인다. */
+  #tab-accuracy .empty { color: var(--muted); font-size: var(--fs-084); padding: 0.5rem 0; }
+  #tab-accuracy .low-n { color: var(--muted); }
+  /* 확신도 '미집행'(<0.50) 행 — sizing.py 가 아예 건너뛰는 구간이라 실제 집행
+     이력이 없다. 승률이 반사실이라는 걸 색으로 먼저 알리고, 각주에서 설명한다.
+     숨기지는 않는다 — 감사 화면에서 행을 감추면 "왜 없지"가 된다. */
+  #tab-accuracy tr.accuracy-counterfactual td { color: var(--muted); font-style: italic; }
+  .accuracy-skipped-tag {
+    font-size: var(--fs-078); font-weight: 600; font-style: normal; color: var(--muted);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.05rem 0.3rem; margin-left: 0.3rem;
+  }
+  /* 토론 영향의 "트레이더 제안 → 최종 방향" 건수 목록. 표가 아니라 칩 나열 —
+     항목이 4~9개뿐이고 정렬할 숫자 열이 하나라 표는 과하다. */
+  .accuracy-breakdown { display: flex; flex-wrap: wrap; gap: var(--space-050); margin-bottom: var(--space-060); }
+  .accuracy-breakdown-item {
+    font-size: var(--fs-080); color: var(--muted); background: var(--surface);
+    border-radius: var(--radius-sm); padding: 0.15rem 0.45rem;
+  }
+  .accuracy-breakdown-item b { color: var(--ink); font-weight: 700; }
+  .seg-btn {
+    flex: 1; padding: 0.45rem 0.7rem; border: none; background: var(--surface);
+    color: var(--ink); font-size: var(--fs-085); font-weight: 600; cursor: pointer; font-family: inherit;
+    border-right: 1px solid var(--border);
+  }
+  .seg-btn:last-child { border-right: none; }
+  .seg-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+  .seg-btn.active { color: #fff; background: var(--accent); }
+  .seg-btn.active[data-value="full_auto"] { background: var(--down); }
+  /* --amber-ink 가 테마별로 다른 이유(2026-08-18): 라이트 --amber(#835807)는
+     충분히 어두워서 흰 잉크가 맞고(6.24:1), 다크 --amber(#e0ad4d)는 충분히
+     밝아서 어두운 잉크가 맞음(8.81:1) — 서로 바꿔 쓰면(#fff on 다크앰버=2.05:1
+     등) AA 미달이라, 이 규칙은 어느 쪽인지 몰라도 되게 --amber-ink 토큰에 위임. */
+  .seg-btn.active[data-value="semi_auto"] { background: var(--amber); color: var(--amber-ink); }
+  .seg-btn.active[data-value="manual"] { background: var(--muted); }
+  .seg-badge {
+    font-size: var(--fs-080); font-weight: 650; border-radius: 999px; padding: 0.3rem 0.85rem;
+    color: var(--muted); background: var(--surface); border: 1px solid var(--border);
+  }
+  .seg-badge.real {
+    color: #fff; background: var(--down); font-weight: 800;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--down) 35%, transparent);
+  }
+  .pending-row { padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+  .pending-row:last-child { border-bottom: none; }
+  .pending-actions { display: flex; gap: var(--space-050); margin-top: var(--space-050); }
+  .pending-approve-btn, .pending-reject-btn { padding: 0.4rem 0.9rem; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; font-family: inherit; font-size: var(--fs-085); }
+  .pending-approve-btn { border: 1px solid var(--up); color: var(--up); background: transparent; }
+  .pending-reject-btn { border: 1px solid var(--down); color: var(--down); background: transparent; }
+  .pending-approve-btn:disabled, .pending-reject-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .open-order-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-075); padding: 0.55rem 0; border-bottom: 1px solid var(--border); font-size: var(--fs-090); }
+  .open-order-row button:disabled { opacity: 0.4; cursor: not-allowed; border-color: var(--border); color: var(--muted); }
+  .analyze-btn:disabled { opacity: 0.55; cursor: progress; }
+  .analyze-status { color: var(--muted); font-size: var(--fs-084); }
+  /* 7-step AI-analysis progress tracker — distinct from .desk-hero-chain
+     (that's a static 4-item "→" arrow chain on the landing hero; this is a
+     live, wrapping dot+label row with done/active/pending state, no arrows,
+     so the two don't read as inconsistent variants of the same shape). */
+  .analyze-pipeline { margin: 0.75rem 0 0.25rem; }
+  .analyze-pipeline-steps {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-060) var(--space-075);
+    list-style: none; margin: 0; padding: 0;
+  }
+  .ap-step { display: flex; align-items: center; gap: var(--space-030); font-size: var(--fs-078); color: var(--muted); white-space: nowrap; }
+  .ap-step-dot {
+    position: relative; width: 0.6rem; height: 0.6rem; border-radius: 999px;
+    background: var(--muted); opacity: 0.4; flex: none;
+  }
+  .ap-step.active .ap-step-dot { background: var(--accent); opacity: 1; animation: pulse-dot 1.2s ease-in-out infinite; }
+  .ap-step.done .ap-step-dot {
+    /* --good, not --up: --up means "price gain" in this app's KRX-red
+       convention (see .status-chip.filled a few hundred lines down, which
+       already uses --good for "completed successfully" states). */
+    background: var(--good); opacity: 1; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ap-step.done .ap-step-dot::after {
+    content: '✓'; color: #fff; font-size: 0.45rem; font-weight: 700; line-height: 1;
+  }
+  .ap-step.active .ap-step-label { color: var(--ink); font-weight: 600; }
+  .ap-step.done .ap-step-label { color: var(--ink-2); }
+  .analyze-pipeline-caption { color: var(--muted); font-size: var(--fs-084); margin-top: var(--space-040); }
+  /* Compact card-sized variant of the tracker above, for the AI 시그널
+     "분석중" placeholder card — same dot language (pending/active/done +
+     pulse-dot), no per-step labels, just a caption for the current stage. */
+  .card-pipeline { margin-top: var(--space-060); }
+  .card-pipeline-dots { display: flex; align-items: center; gap: var(--space-040); }
+  .card-pipeline-step {
+    position: relative; width: 0.4rem; height: 0.4rem; border-radius: 999px;
+    background: var(--muted); opacity: 0.4; flex: none; display: inline-block;
+  }
+  .card-pipeline-step.active { background: var(--accent); opacity: 1; animation: pulse-dot 1.2s ease-in-out infinite; }
+  .card-pipeline-step.done { background: var(--good); opacity: 1; }
+  .card-pipeline-caption { color: var(--muted); font-size: var(--fs-070); margin-top: var(--space-030); }
+  #detail-analysis { margin-top: var(--space-075); padding: 0.9rem 1rem; background: var(--surface-2); border-radius: var(--radius-lg); font-size: var(--fs-090); white-space: pre-wrap; line-height: 1.5; }
+  .kr-tab.active { color: var(--accent); border-color: var(--accent); }
+  .kr-panel { margin: 0; font-size: var(--fs-082); overflow-x: auto; }
+  .kr-panel .kr-cap { color: var(--muted); font-size: var(--fs-078); margin: 0 0 0.4rem; }
+  .kr-panel .kr-note { margin: 0.5rem 0 0; font-size: var(--fs-080); font-weight: 600; color: var(--ink); }
+  .kr-panel .kr-sec-title { font-size: var(--fs-082); font-weight: 700; margin: 0.9rem 0 0.4rem; }
+  .kr-panel .kr-sec-title:first-child { margin-top: 0; }
+  .kr-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .kr-table th, .kr-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  .kr-table th:first-child, .kr-table td:first-child { text-align: left; }
+  .kr-table th { color: var(--muted); font-weight: 600; font-size: var(--fs-074); }
+  .kr-table tbody tr:last-child td { border-bottom: none; }
+  .kr-table td.pos { color: var(--up); } .kr-table td.neg { color: var(--down); }
+  .kr-news { display: flex; flex-direction: column; gap: var(--space-015); }
+  .kr-news .kr-news-row { display: flex; gap: var(--space-060); padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+  .kr-news .kr-news-row:last-child { border-bottom: none; }
+  .kr-news .kr-news-meta { color: var(--muted); font-size: var(--fs-074); white-space: nowrap; min-width: 92px; }
+  .kr-empty { color: var(--muted); padding: 0.6rem 0; }
+  .card-remove { margin-left: auto; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: var(--fs-090); padding: 0 0.25rem; }
+  .card-remove:hover { color: var(--down); }
+  .orderbook .ob-cell { padding: 0.25rem 0.6rem; }
+  .orderbook .ob-askqty { text-align: right; background: color-mix(in srgb, var(--up) 10%, transparent); }
+  .orderbook .ob-bidqty { text-align: left; background: color-mix(in srgb, var(--down) 10%, transparent); }
+  .orderbook .ob-price { text-align: center; font-weight: 700; }
+  .orderbook .ob-price.ask { color: var(--up); }
+  .orderbook .ob-price.bid { color: var(--down); }
+  .orderbook .ob-empty { grid-column: 1 / -1; color: var(--muted); padding: var(--space-050); text-align: center; }
+
+  .more-btn {
+    display: block; width: 100%; margin-top: var(--space-055); padding: var(--space-045);
+    background: none; border: 1px dashed var(--border); border-radius: var(--radius-lg);
+    color: var(--accent); font-weight: 600; font-size: var(--fs-078); cursor: pointer; font-family: inherit;
+  }
+  .more-btn:hover { background: var(--accent-wash); border-style: solid; }
+
+  /* real-time trading-halt/circuit-breaker overlay (app.live.kis_market_status) */
+  .market-status.halted { color: #fff; background: var(--down); font-weight: 700; }
+
+  /* market-regime bar (KOSPI/KOSDAQ) — reuses this file's pre-existing,
+     previously-unused .pulse-strip/.pulse-item classes rather than adding a
+     parallel set of names for the same "small stats strip" shape. */
+  .pulse-strip .cb-warn {
+    color: #fff; background: var(--down); font-weight: 700; padding: 0.1rem 0.5rem; border-radius: var(--radius-md);
+  }
+
+
+  /* one-click AI analysis */
+  .detail-actions { display: flex; align-items: center; gap: var(--space-075); margin: 0.75rem 0 0.25rem; }
+  .analyze-btn { padding: 0.6rem 1rem; border: none; border-radius: var(--radius-lg); background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+  /* order ticket */
+  .order-ticket { max-width: 440px; }
+  .order-side-toggle .oside, .order-type-toggle .otype {
+    flex: 1; padding: var(--space-050); border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+    border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: var(--fs-085); font-family: inherit;
+  }
+  .order-field select, .order-field input {
+    flex: 1; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface); color: var(--ink); font-size: var(--fs-090); font-family: inherit;
+  }
+  .order-submit { width: 100%; padding: var(--space-070); border: none; border-radius: var(--radius-2xl); background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; }
+  /* Aligned to the input column, not the label — matches .order-field's own
+     64px label width + 0.75rem gap (line ~950/1100 above). Change either of
+     those and this padding-left needs to move with it. */
+  .order-qty-quick { display: flex; gap: var(--space-040); margin: -0.35rem 0 0.7rem; padding-left: calc(64px + 0.75rem); }
+  .order-qty-quick .oqty {
+    flex: 1; padding: 0.35rem 0; font-size: var(--fs-078); font-weight: 600;
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface); color: var(--muted);
+    cursor: pointer; font-family: inherit;
+  }
+  .order-qty-quick .oqty:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+  .order-qty-quick .oqty:disabled { opacity: 0.45; cursor: not-allowed; }
+  .order-estimate {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-050);
+    margin-bottom: var(--space-060); padding: 0.5rem 0.65rem; border-radius: var(--radius-lg);
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+  .order-estimate .oest-label { font-size: var(--fs-080); color: var(--muted); }
+  .order-estimate .oest-value { font-size: var(--fs-100); font-weight: 700; color: var(--ink); }
+  .order-estimate.over .oest-value { color: var(--amber); }
+  .order-estimate .oest-warn { font-size: var(--fs-076); color: var(--amber); }
+  .open-order-row button { padding: 0.35rem 0.7rem; border: 1px solid var(--down); color: var(--down); background: transparent; border-radius: var(--radius-md); cursor: pointer; font-family: inherit; }
+
+  /* screeners (volume/fluctuation/sector rank) */
+  .rank-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-070); gap: var(--space-050); flex-wrap: wrap; }
+  .rank-refresh { font: inherit; font-size: var(--fs-078); padding: 0.3rem 0.7rem; border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: var(--radius-md); cursor: pointer; }
+
+  /* candlestick period chart + intraday minute chart */
+  .minute-chart .mc-empty, .mc-empty { color: var(--muted); font-size: var(--fs-084); padding: 0.5rem 0; }
+
+  /* live orderbook */
+  .orderbook { display: grid; grid-template-columns: 1fr 90px 1fr; gap: 2px 0; font-size: var(--fs-080); font-variant-numeric: tabular-nums; }
+
+  /* KR-insight panel (수급/재무/투자의견/리스크/뉴스) — table content ships
+     Korean-only for now (a deliberate, confirmed scope decision); only the
+     tab labels/section title below go through the i18n system. */
+  .kr-tabs { display: flex; gap: var(--space-030); flex-wrap: wrap; margin: 0.5rem 0 0.6rem; }
+  .kr-tab { padding: 0.35rem 0.7rem; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: var(--radius-md); cursor: pointer; font-size: var(--fs-084); font-family: inherit; }
+
+  /* KIS-not-configured gate (js/onboarding.js). Covers the whole page rather
+     than sitting inside the app shell: this deployment has no login/KIS-key
+     form any more (2026-08-07 single-account rollback — credentials are
+     Jenkins-injected env vars, see
+     docs/single-user-rollback-guide.md Phase 5), so there is nothing
+     actionable to show except "an administrator needs to fix this deployment's
+     env" — a half-drawn dashboard full of 412s behind that message would still
+     read as "my account is broken," so it stays fully covered.
+     로그인/키 입력 폼이 사라졌으므로 안내 메시지 외에는 보여줄 게 없음 — 그래도
+     뒤에서 412가 쏟아지는 반쯤 그려진 대시보드보다는 전체를 덮는 편이 나음. */
+  /* Set by onboarding.js while the gate is mounted — see mount(). */
+  html.onboard-locked, html.onboard-locked body { overflow: hidden; }
+  .onboard-overlay { position: fixed; inset: 0; z-index: var(--z-overlay); display: flex; align-items: center; justify-content: center; padding: var(--space-150); background: var(--page); overflow-y: auto; }
+  .onboard-card { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-4xl); box-shadow: var(--shadow); padding: var(--space-175); }
+  .onboard-brand { display: flex; align-items: center; gap: var(--space-050); font-size: var(--fs-084); color: var(--muted); margin-bottom: var(--space-110); }
+  .onboard-brand-mark { background: var(--hero-grad); color: var(--hero-ink); font-weight: 800; font-size: var(--fs-070); letter-spacing: 0.03em; padding: 0.2rem 0.4rem; border-radius: var(--radius-sm2); }
+  .onboard-title { font-size: var(--fs-125); font-weight: 700; color: var(--ink); margin: 0 0 0.4rem; }
+  .onboard-sub { font-size: var(--fs-084); line-height: 1.5; color: var(--ink-2); margin: 0 0 1.25rem; }
+
+/* Persistent, non-blocking notice (js/onboarding.js's
+   maybeShowRealLimitsBanner) — unlike the overlay above, this shows up
+   AFTER the dashboard has booted, when real KIS credentials exist but the
+   real-account order-value/approval limits (KIS_MAX_ORDER_KRW_REAL etc.)
+   don't. Not blocking: the rest of the dashboard (positions, memory, chat)
+   is fully usable in this state, only real BUY/SELL orders are refused —
+   see app.config._require_real_money_limits_on_real_account. Reuses the
+   same "real money, do not let this get skimmed past" color language the
+   old credential form's warning note used.
+   실전 자격증명은 있지만 실전 주문한도가 없는 상태 — 대시보드 자체는 정상
+   사용 가능하고 실전 매수/매도만 막히므로 차단형이 아니라 상단 고정 배너. */
+.real-limits-banner {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky-banner);
+  padding: 0.55rem 1rem;
+  background: var(--up-wash);
+  color: var(--up);
+  font-size: var(--fs-082);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 서버 연결 끊김 배너(js/trading.js의 setConnectionBanner, 2026-08-18) — 앰버:
+   --up 은 이 팔레트의 유일한 적색이고 위 .real-limits-banner(실전 자금 경고)가
+   이미 그 색을 쓰고 있음 — 연결 끊김은 "주의 필요"이지 "돈이 위험하다"가 아니라서
+   --amber 가 맞는 색. 지오메트리는 위 배너와 동일하게 맞춰서 두 배너가 겹칠 때
+   (드물게, 실전+연결끊김 동시) 시각적으로 어색하지 않게 함. */
+.connection-banner {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky-banner);
+  padding: 0.55rem 1rem;
+  background: var(--amber-wash);
+  color: var(--amber);
+  font-size: var(--fs-082);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---------------- in-app dialog (js/dialog.js) ----------------
+   브라우저 기본 confirm()/prompt()/alert() 대체(2026-08-18). 기본 대화상자는
+   "127.0.0.1:8000 says" 가 그대로 노출되고 스타일을 입힐 수 없어서, 실제 돈이
+   오가는 확인 창이 가장 미완성처럼 보였음.
+   네이티브 confirm 의 안전 성질은 그대로 유지한다 — 배경 클릭 / Escape / 닫기는
+   전부 '취소'로 귀결되고, 진행하려면 확인 버튼을 직접 눌러야만 한다.
+   z-index 1300 은 체결 모달(1200)·검색 드롭다운(1100)·토스트(1000)보다 위 —
+   확인을 요구하는 창이 다른 것에 가려지면 안 되기 때문. */
+.app-dialog-backdrop {
+  position: fixed; inset: 0; z-index: var(--z-dialog);
+  display: none; align-items: center; justify-content: center; padding: var(--space-150);
+  background: rgba(0,0,0,0.55);
+}
+.app-dialog-backdrop.open { display: flex; }
+.app-dialog {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow); padding: 1.4rem 1.5rem 1.15rem;
+  width: min(420px, 100%); max-height: 85vh; overflow-y: auto;
+}
+.app-dialog-title { font-size: var(--fs-102); font-weight: 700; color: var(--ink); margin: 0 0 0.5rem; }
+/* 본문은 평문(textContent)만 받는다 — 확인 창에 HTML을 끼워넣을 수 있게 하면
+   종목명 같은 외부 문자열이 그대로 파싱될 여지가 생긴다. 줄바꿈은 pre-wrap 이
+   처리하고, 금액·수량이 그대로 들어오므로 숫자는 등폭으로 고정. */
+.app-dialog-body {
+  font-size: var(--fs-088); line-height: 1.55; color: var(--ink-2);
+  margin: 0 0 1rem; white-space: pre-wrap; font-variant-numeric: tabular-nums;
+}
+.app-dialog-input {
+  width: 100%; padding: 0.5rem 0.65rem; margin-bottom: var(--space-100);
+  border: 1px solid var(--border); border-radius: var(--radius-md2); background: var(--surface-2);
+  color: var(--ink); font: inherit; font-size: var(--fs-092); font-variant-numeric: tabular-nums;
+}
+.app-dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-050); }
+.app-dialog-actions button {
+  padding: 0.48rem 1.05rem; border-radius: var(--radius-md2); font-family: inherit;
+  font-size: var(--fs-086); font-weight: 700; cursor: pointer;
+}
+.app-dialog-cancel { border: 1px solid var(--border); background: var(--surface-2); color: var(--ink-2); }
+/* 채움색 위 글자는 --page — 라이트에서는 흰색 계열, 다크에서는 검정 계열이라
+   테마가 바뀌어도 대비가 유지된다(흰색 고정이면 다크의 밝은 --accent 위에서
+   대비가 무너짐). */
+.app-dialog-confirm { border: 1px solid var(--accent); background: var(--accent); color: var(--page); }
+/* 파괴적 동작(킬스위치 등)은 채움 대신 외곽선 — 대비가 안전하고, 눌러야만
+   진행되는 버튼을 굳이 시선의 자석으로 만들 이유가 없다. */
+.app-dialog-confirm.danger { border-color: var(--up); background: transparent; color: var(--up); }
+.app-dialog { animation: app-dialog-in 0.14s ease; }
+@keyframes app-dialog-in { from { opacity: 0; transform: translateY(6px) scale(0.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .app-dialog { animation: none; } }

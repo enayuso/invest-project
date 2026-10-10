@@ -1,0 +1,108 @@
+{
+  "tools": [
+    {
+      "name": "resolve_ticker",
+      "description": "모든 조회의 시작점. 종목코드('005930'), 정식 한글명('삼성전자'), 또는 접미사 포함 심볼('005930.KS')을 받아 KRX 종목마스터파일(KOSPI/KOSDAQ, 무인증 배포)에서 정확한 시장 구분과 yfinance 접미사(.KS/.KQ)를 결정합니다. 다른 4개 도구는 이 도구가 반환한 yf_symbol만 받으므로, 접미사를 직접 추측해서 다른 도구에 넘기지 마세요 -- 틀린 접미사는 에러 없이 며칠 전 가격으로 고정된 스테일 데이터를 반환할 수 있습니다. 마스터파일에 없는 코드는 추정 심볼 없이 에러를 반환합니다. 이 도구가 제공하지 않는 데이터(추측·환각 금지): VI(변동성완화장치) 발동 여부 / 서킷브레이커 상태 / 시장경보(투자주의/경고/위험) 지정 여부 / 관리종목 지정 여부 / 외국인·기관 수급, 프로그램 매매 동향 / 공매도 잔고 및 거래량 / 실시간 호가창(체결가만 제공, 매수/매도 호가 정보 없음) / 국내 뉴스 원문 (필요하면 Claude Desktop 자체 웹검색을 별도로 쓰되, 이 도구가 준 데이터와 명확히 구분할 것)",
+      "inputSchema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "resolve_tickerArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_price_snapshot",
+      "description": "resolve_ticker가 반환한 yf_symbol의 현재 시세 스냅샷을 반환합니다. 장중이면 session_status='in_progress'와 today_partial(open/high/low/last_price/volume/as_of)을, 장마감 후면 session_status='closed'와 today_close를 반환합니다. today_partial에는 'close' 필드가 존재하지 않습니다 -- 장중 마지막 체결가(last_price)를 종가로 서술하지 마세요. 데이터가 스테일하거나(잘못된 접미사 등) 존재하지 않으면 에러를 던집니다(조용한 실패 없음). 응답의 price_integrity.status가 'anomalies_found'이면 가격제한폭(±30%)을 넘는 변동·거래량 0·긴 공백 등 가격 연속성 문제가 있다는 뜻입니다 -- 원인(분할·감자·거래재개·데이터 오류 등)을 단정하지 말고, 해당 구간을 포함한 수익률·지표를 근거로 쓰지 마세요. 이 도구가 제공하지 않는 데이터(추측·환각 금지): VI(변동성완화장치) 발동 여부 / 서킷브레이커 상태 / 시장경보(투자주의/경고/위험) 지정 여부 / 관리종목 지정 여부 / 외국인·기관 수급, 프로그램 매매 동향 / 공매도 잔고 및 거래량 / 실시간 호가창(체결가만 제공, 매수/매도 호가 정보 없음) / 국내 뉴스 원문 (필요하면 Claude Desktop 자체 웹검색을 별도로 쓰되, 이 도구가 준 데이터와 명확히 구분할 것)",
+      "inputSchema": {
+        "properties": {
+          "yf_symbol": {
+            "title": "Yf Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "yf_symbol"
+        ],
+        "title": "get_price_snapshotArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_price_history",
+      "description": "resolve_ticker가 반환한 yf_symbol의 완성된 일봉 이력을 반환합니다(date/open/high/low/close/volume). period는 yfinance 기간 문자열(예: '1mo','3mo','6mo','1y')입니다. 진행 중인 오늘 봉은 이 배열에 포함되지 않습니다(get_price_snapshot에서 별도 제공). bars_through가 배열의 마지막 완성봉 날짜입니다. 0개의 완성봉만 있거나 데이터가 스테일하면 에러를 던집니다. 응답의 price_integrity.status가 'anomalies_found'이면 가격제한폭(±30%)을 넘는 변동·거래량 0·긴 공백 등 가격 연속성 문제가 있다는 뜻입니다 -- 원인(분할·감자·거래재개·데이터 오류 등)을 단정하지 말고, 해당 구간을 포함한 수익률·지표를 근거로 쓰지 마세요. 이 도구가 제공하지 않는 데이터(추측·환각 금지): VI(변동성완화장치) 발동 여부 / 서킷브레이커 상태 / 시장경보(투자주의/경고/위험) 지정 여부 / 관리종목 지정 여부 / 외국인·기관 수급, 프로그램 매매 동향 / 공매도 잔고 및 거래량 / 실시간 호가창(체결가만 제공, 매수/매도 호가 정보 없음) / 국내 뉴스 원문 (필요하면 Claude Desktop 자체 웹검색을 별도로 쓰되, 이 도구가 준 데이터와 명확히 구분할 것)",
+      "inputSchema": {
+        "properties": {
+          "yf_symbol": {
+            "title": "Yf Symbol",
+            "type": "string"
+          },
+          "period": {
+            "default": "3mo",
+            "title": "Period",
+            "type": "string"
+          }
+        },
+        "required": [
+          "yf_symbol"
+        ],
+        "title": "get_price_historyArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_technical_indicators",
+      "description": "resolve_ticker가 반환한 yf_symbol의 기술적 지표를 이 도구가 직접 계산해 반환합니다: RSI(14), MACD(macd/signal/histogram), 이동평균(5/20/60/120일), 볼린저밴드, ATR(14), 거래량 20일 이동평균. 계산에는 완성된 일봉만 사용하며 진행 중인 오늘 봉은 제외합니다 (제외하지 않으면 값이 장중 내내 바뀝니다). computed_through가 계산에 사용된 마지막 완성봉 날짜입니다. 계산에 필요한 기간(예: 120일 이평선에 120거래일)이 부족한 지표는 null이며 missing 목록에 표시됩니다 -- 값을 추정하지 않습니다. 응답의 price_integrity.status가 'anomalies_found'이면 가격제한폭(±30%)을 넘는 변동·거래량 0·긴 공백 등 가격 연속성 문제가 있다는 뜻입니다 -- 원인(분할·감자·거래재개·데이터 오류 등)을 단정하지 말고, 해당 구간을 포함한 수익률·지표를 근거로 쓰지 마세요. 이 도구가 제공하지 않는 데이터(추측·환각 금지): VI(변동성완화장치) 발동 여부 / 서킷브레이커 상태 / 시장경보(투자주의/경고/위험) 지정 여부 / 관리종목 지정 여부 / 외국인·기관 수급, 프로그램 매매 동향 / 공매도 잔고 및 거래량 / 실시간 호가창(체결가만 제공, 매수/매도 호가 정보 없음) / 국내 뉴스 원문 (필요하면 Claude Desktop 자체 웹검색을 별도로 쓰되, 이 도구가 준 데이터와 명확히 구분할 것)",
+      "inputSchema": {
+        "properties": {
+          "yf_symbol": {
+            "title": "Yf Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "yf_symbol"
+        ],
+        "title": "get_technical_indicatorsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_fundamentals",
+      "description": "resolve_ticker가 반환한 yf_symbol의 재무 데이터를 반환합니다: 시가총액, 매출/영업이익/순이익(최근 4~5개년 + 가용시 최근 분기), 자본총계, 부채총계, 그리고 이 도구가 직접 계산한 PER/PBR/ROE/부채비율. 모든 금액은 {display: '333.6조원', krw: <정수>} 형태이며, display가 1차 서술용이고 krw는 검산용이므로 서술에 원 단위 그대로(특히 million/billion 같은 영문 단위로) 옮기지 마세요. ETF는 is_etf=true, financials_available=false와 사유가 반환되며 재무비율 자리에 0이나 추정치가 들어가지 않습니다. 적자 등으로 비율이 의미 없는 경우 값 대신 null과 reason이 반환됩니다 -- 추정하지 마세요. 이 도구가 제공하지 않는 데이터(추측·환각 금지): VI(변동성완화장치) 발동 여부 / 서킷브레이커 상태 / 시장경보(투자주의/경고/위험) 지정 여부 / 관리종목 지정 여부 / 외국인·기관 수급, 프로그램 매매 동향 / 공매도 잔고 및 거래량 / 실시간 호가창(체결가만 제공, 매수/매도 호가 정보 없음) / 국내 뉴스 원문 (필요하면 Claude Desktop 자체 웹검색을 별도로 쓰되, 이 도구가 준 데이터와 명확히 구분할 것)",
+      "inputSchema": {
+        "properties": {
+          "yf_symbol": {
+            "title": "Yf Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "yf_symbol"
+        ],
+        "title": "get_fundamentalsArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "name": "analysis_script",
+      "title": "국내 주식 분석 대본",
+      "description": "국내(KRX) 종목 1개를 이 서버의 도구 데이터만 근거로 매수/관망/회피로 판단하는 분석 데스크 대본(절대규칙 8개 + 0~5단계). ticker를 주면 대본 앞에 분석 대상을 한 줄 명시합니다. 여러 종목 비교·포트폴리오 반영·목표주가 산출은 범위 밖입니다.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "instructions_before": "한국(KRX) 상장 종목의 시세/지표/재무 데이터를 제공합니다. 항상 resolve_ticker를 먼저 호출해 정확한 yf_symbol을 얻은 뒤 다른 도구에 그 값을 넘기세요. 코드나 접미사를 직접 추측하지 마세요. 이 도구가 제공하지 않는 데이터(추측·환각 금지): VI(변동성완화장치) 발동 여부 / 서킷브레이커 상태 / 시장경보(투자주의/경고/위험) 지정 여부 / 관리종목 지정 여부 / 외국인·기관 수급, 프로그램 매매 동향 / 공매도 잔고 및 거래량 / 실시간 호가창(체결가만 제공, 매수/매도 호가 정보 없음) / 국내 뉴스 원문 (필요하면 Claude Desktop 자체 웹검색을 별도로 쓰되, 이 도구가 준 데이터와 명확히 구분할 것)"
+}

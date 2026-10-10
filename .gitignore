@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+.env.kis.local
+.kis_token_cache*.json
+.pytest_cache/
+.venv
+.claude/
+.obsidian/
+desktop.ini
+backtest.log
+backtest_*.log
+parallel_*.log
+daemon_*.log
+logs/
+# Experiment output (app.experiments.*): one JSON per run holding that run's
+# FULL pipeline transcript — every analyst report and both debates. Same
+# convention as logs/ above: generated evidence, not source. A single
+# language_ab pilot is already ~450KB across 6 runs, and the scaled-up study
+# is 40+ runs, so these belong on disk (and in a handoff note) rather than in
+# the deploy branch.
+results/
+.DS_Store
+# Local scratch space for one-off investigation scripts and DB/query
+# experiments — never source, and several hold hardcoded DSNs.
+# 일회성 조사 스크립트 전용, 커밋 금지.
+scratchpad/

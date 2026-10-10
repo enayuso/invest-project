@@ -1,0 +1,28 @@
+[project]
+name = "stock-advisor-mcp"
+version = "0.1.0"
+description = "MCP server exposing KRX stock data (yfinance + KRX master files) for Claude Desktop"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp",
+    "yfinance",
+    "stockstats",
+    "httpx",
+    "pandas",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
+
+[project.scripts]
+stock-advisor-mcp = "stock_advisor_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+stock_advisor_mcp = ["prompts/*.md"]

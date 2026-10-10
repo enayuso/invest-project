@@ -1,0 +1,43 @@
+[project]
+name = "invest-project"
+version = "0.1.0"
+description = "Standalone multi-agent trading-decision pipeline (Phase 1: core decision loop)"
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    "openai>=1.60.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "yfinance>=0.2.50",
+    "lxml>=5.3.0",
+    "httpx>=0.27.0",
+    "pandas>=2.2.0",
+    "asyncpg>=0.30.0",
+    "pgvector>=0.3.6",
+    "onnxruntime>=1.20.0",
+    "tokenizers>=0.20.0",
+    "huggingface_hub>=0.26.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "websockets>=13.0",
+    "pycryptodome>=3.23.0",
+    "TA-Lib>=0.7.1",
+    "anthropic>=0.69.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-xdist>=3.6.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

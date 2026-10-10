@@ -1,0 +1,11 @@
+# .dockerignore
+.git
+.venv
+__pycache__
+*.pyc
+.env
+.pytest_cache
+
+# Never bake a KIS access token into an image — the runtime cache lives on a
+# mounted volume (see pipeline.sh KIS_TOKEN_CACHE_DIR).
+.kis_token_cache*.json

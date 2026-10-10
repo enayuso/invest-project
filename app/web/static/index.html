@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>invest-pipeline</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+  <!-- 매매 체결 시 크게 띄우는 알림 — 일반 토스트(작고 우측상단)와 별개, 종목/가격/AI
+       판단 이유까지 보여줘야 해서 전용 모달로 분리 (2026-07-30).
+       의도적으로 dialog(role="dialog"/aria-modal)가 아니라 알림(role="status")이다:
+       사용자가 연 게 아니라 체결 감지 시 자동으로 뜨고 10초 뒤 스스로 사라지며,
+       아무 결정도 요구하지 않는다. 포커스를 뺏거나 가두면(=dialog.js 방식)
+       주문 입력 중이던 사용자의 포커스를 훔쳤다가 10초 뒤 다시 튕기게 된다.
+       탈출 수단은 Escape 하나로 충분 — showTradeFillModal 참조. -->
+  <div class="trade-fill-modal" id="trade-fill-modal" hidden role="status" aria-live="polite" aria-atomic="true">
+    <div class="trade-fill-modal-backdrop" id="trade-fill-modal-backdrop"></div>
+    <div class="trade-fill-modal-card">
+      <button class="trade-fill-modal-close" id="trade-fill-modal-close" data-i18n-aria-label="modalCloseAria">✕</button>
+      <div class="tfm-badge" id="tfm-badge"></div>
+      <div class="tfm-ticker-row">
+        <div class="tfm-name" id="tfm-name"></div>
+        <div class="tfm-symbol" id="tfm-symbol"></div>
+      </div>
+      <div class="tfm-detail" id="tfm-detail"></div>
+      <div class="tfm-reason-label" id="tfm-reason-label"></div>
+      <div class="tfm-reason-text" id="tfm-reason-text"></div>
+    </div>
+  </div>
+
+  <!-- app-shell: 사이드바(전체 높이) + 메인 컬럼(콘텐츠만, 헤더는 2026-08-19에
+       폐지됨 — 컨트롤은 사이드바 .sidebar-utility·설정 탭으로 이동). -->
+  <div class="app-shell">
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-mark">AI</span>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-brand-name">invest-pipeline</div>
+          <div class="sidebar-brand-sub">AI TRADING</div>
+        </div>
+      </div>
+      <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn">
+        <span class="sidebar-collapse-icon">◫</span> <span class="sidebar-collapse-label">사이드바 접기</span>
+      </button>
+      <!-- 아이콘 4개 전부 알림벨(사이드바 유틸리티)과 같은 인라인 SVG 선 스타일(2026-08-18,
+           예전엔 ✦/📈/💬/⋯ 이모지·딩벳·수학기호 혼용). AI 시그널 아이콘은 이 앱이
+           "AI"를 나타낼 때 이미 쓰는 다이아몬드 스파클을 그대로 재사용(에이전트
+           활동 불릿·챗 모델 배지와 동일 path) — 새 아이콘을 만들지 않고 기존
+           시각언어에 맞춤. aria-hidden — 라벨(navSignals 등)이 이미 이름을 말해줌. -->
+      <button class="sidebar-tab active" data-navtab="nav-signals" type="button">
+        <span class="sidebar-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 13.9 9.1 20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"></path></svg></span> <span class="sidebar-tab-label" data-i18n="navSignals"></span>
+        <span class="sidebar-tab-badge" id="sidebar-signals-badge" hidden>0</span>
+      </button>
+      <button class="sidebar-tab" data-navtab="nav-trading" type="button"><span class="sidebar-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></span> <span class="sidebar-tab-label" data-i18n="navTrading"></span></button>
+      <button class="sidebar-tab" data-navtab="nav-assistant" type="button"><span class="sidebar-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></span> <span class="sidebar-tab-label" data-i18n="navAssistant"></span></button>
+      <button class="sidebar-tab sidebar-tab-settings" data-navtab="nav-settings" type="button"><span class="sidebar-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span> <span class="sidebar-tab-label" data-i18n="tabSettings"></span></button>
+      <!-- 헤더(.topbar) 폐지(2026-08-19)로 여기로 옮겨온 유틸리티 모음 — 국내/해외
+           스코프, 언어·테마, 계정모드 배지, 매매모드(읽기전용 텍스트, 실제 컨트롤은
+           설정 탭 #rt-execution-mode), 장중상태 배지, 알림벨. 접었을 때는
+           .sidebar-acct-summary 와 동일하게 통째로 숨김(개별 아이콘화는 하지 않음). -->
+      <div class="sidebar-utility" id="sidebar-utility">
+        <div class="seg-group" id="market-scope-toggle">
+          <button type="button" class="seg-btn active" data-scope="domestic" data-i18n="scopeDomesticShort">국내</button>
+          <button type="button" class="seg-btn" data-scope="overseas" data-i18n="scopeOverseasShort">해외</button>
+        </div>
+        <!-- 사이드바 시각통일(2026-08-19): 아래 행들은 전부 .sidebar-tab과 같은
+             `.sidebar-row` 모양(패딩/반경/폰트/gap)을 공유 — 이전엔 각자 옮겨온
+             원래(헤더 시절) 테두리 스타일을 그대로 유지해서 제각각이었음. -->
+        <div class="sidebar-row">
+          <span class="sidebar-tab-label" data-i18n="sidebarLangLabel"></span>
+          <span class="lang-switch" id="lang-switch"></span>
+        </div>
+        <div class="sidebar-row">
+          <span class="sidebar-tab-label" data-i18n="sidebarThemeLabel"></span>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="theme">
+            <span id="theme-icon">🌙</span>
+          </button>
+        </div>
+        <span class="account-mode-pill" id="header-account-mode-pill"><span class="dot"></span><span id="header-account-mode-text"></span></span>
+        <div class="sidebar-row">
+          <span class="sidebar-tab-label" data-i18n="executionModeLabel"></span>
+          <span class="sidebar-mode-text" id="sidebar-exec-mode-text"></span>
+        </div>
+        <span class="market-status-pill" id="header-market-status-pill"><span class="dot"></span><span id="header-market-status-text"></span></span>
+        <!-- 알림벨: "AI 시그널" 사이드바 뱃지와 같은 카운트를 재사용(새 데이터 아님), 클릭 시 그 탭으로 이동. -->
+        <button class="notif-btn sidebar-row" id="header-notif-btn" type="button" data-i18n-aria-label="notifAria" aria-label="">
+          <span class="sidebar-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"></path></svg></span>
+          <span class="sidebar-tab-label" data-i18n="sidebarNotifLabel"></span>
+          <span class="notif-dot" id="header-notif-dot" hidden></span>
+        </button>
+      </div>
+
+      <!-- 목업처럼 계좌 요약을 사이드바에 항상 표시(어느 탭에 있든 보임). 국내(KRW)
+           총평가금액만 압축 표기 — 스코프별 상세 내역은 트레이딩 → 포트폴리오 상세의
+           요약 카드(#portfolio-summary)에 있음. -->
+      <div class="sidebar-acct-summary" id="sidebar-acct-summary" hidden>
+        <div class="sidebar-acct-summary-head">
+          <div class="label" data-i18n="sidebarAcctLabel">내 평가자산 · 국내(KRW)</div>
+          <button type="button" class="sidebar-acct-detail-link" id="sidebar-acct-detail-link" data-i18n="sidebarAcctDetailLink">상세 ›</button>
+        </div>
+        <div class="total" id="sidebar-acct-total">—</div>
+        <div class="pnl" id="sidebar-acct-pnl">—</div>
+      </div>
+    </nav>
+    <div class="main-col">
+      <!-- 헤더(.topbar) 폐지(2026-08-19) — 검색은 삭제, 지수클러스터는 DOM에서만
+           제거(JS/엔드포인트는 재사용 예정이라 보존), 나머지 컨트롤은 사이드바
+           .sidebar-utility 로, 매매모드 토글은 설정 탭 #rt-execution-mode 로 이동. -->
+      <div class="nav-panels">
+
+      <!-- AI 시그널 tab: matches the mockup's AI 시그널 대시보드. -->
+      <div class="nav-panel active" id="nav-signals">
+  <div class="wrap">
+    <!-- 랜딩 히어로 — auto_trade 활성 여부와 무관하게 항상 보임(그 아래 카드
+         섹션만 조건부로 숨겨짐). "이게 뭔지(제목/태그라인/4단계 체인) · 방금 뭘
+         했는지(상태줄) · 지금 할 일이 있는지(승인대기 CTA)"만 답하고, 실행모드/
+         계좌모드/장중여부는 사이드바(.sidebar-utility)에 이미 상시 노출되므로
+         여기서 중복하지 않음(2026-08-18, 2026-08-19 헤더→사이드바 이동 후에도
+         유효). #signal-dashboard-sub id는 그대로 유지 — 업데이트 로직만
+         signals.js에서 다시 씀. -->
+    <div class="signal-dashboard-head">
+      <h1 class="desk-hero-title" data-i18n="deskHeroTitle"></h1>
+      <p class="desk-hero-tagline" data-i18n="deskHeroTagline"></p>
+      <ol class="desk-hero-chain">
+        <li data-i18n="deskChainAnalysts"></li>
+        <li data-i18n="deskChainDebate"></li>
+        <li data-i18n="deskChainRisk"></li>
+        <li data-i18n="deskChainPm"></li>
+      </ol>
+      <div class="signal-dashboard-sub" id="signal-dashboard-sub">—</div>
+      <button type="button" id="desk-hero-pending" class="desk-hero-pending" hidden></button>
+    </div>
+
+    <!-- AI 시그널 카드: SEMI_AUTO/FULL_AUTO 분석 진행 상황(대기/분석중/완료). MANUAL이거나
+         auto_trade 비활성이면 통째로 숨김(/api/auto-trade/status의 enabled). "다시 분석"
+         버튼은 SEMI_AUTO에서만 보임(FULL_AUTO는 타이머로 계속 도니까 버튼 없음). -->
+    <div class="signal-section" id="signal-section" hidden>
+      <div class="signal-section-head">
+        <h2 class="sec" style="margin:0" data-i18n="signalsTitle"></h2>
+        <span class="signal-section-hint" data-i18n="signalsSectionHint"></span>
+        <button type="button" class="signal-reanalyze-btn" id="signal-reanalyze-btn" hidden></button>
+      </div>
+      <div class="signal-cards" id="analyzing-cards"></div>
+      <!-- 수동 분석(사람이 종목을 직접 지정해 돌린 판단) 전용 슬롯 — 자동 사이클
+           판단과 10/3 별도 정원. 비어 있으면 통째로 숨김(signals.js의
+           renderAnalyzingCards). -->
+      <div class="signal-manual-group" id="signal-manual-group" hidden>
+        <div class="signal-group-head">
+          <span class="signal-group-title" data-i18n="signalManualGroupTitle"></span>
+          <span class="signal-group-hint" data-i18n="signalManualGroupHint"></span>
+        </div>
+        <div class="signal-cards" id="analyzing-cards-manual"></div>
+      </div>
+    </div>
+
+    <!-- 마켓 위젯(코스피/코스닥/원달러/나스닥100/VIX, 2026-08-19) — 히어로+카드
+         아래 남는 공간을 채움. pollMarketWidget(trading.js)/renderMarketWidget
+         (signals.js)가 /api/market-widget으로 채움. -->
+    <div class="market-widget" id="market-widget" hidden></div>
+
+  </div>
+      </div><!-- /nav-signals -->
+
+      <!-- 트레이딩 tab: matches the mockup's 관심종목/상세차트/주문 tab — account
+           hero, screener, order ticket, holdings, trade allowlist all live here. -->
+      <div class="nav-panel" id="nav-trading" hidden>
+  <div class="wrap">
+
+    <div class="trading-layout">
+      <!-- left: trade allowlist (관심종목) — click a row to select it below. 목업처럼
+           자체 카드(surface-2 배경, 250px 고정폭)이며 별도 제목 없이 서브탭부터 시작. -->
+      <div class="trading-trade-allowlist-col">
+        <div class="trade-allowlist-panel">
+          <div class="trade-allowlist-panel-head">
+            <!-- 목업의 관심종목/최근 본/실시간 서브탭. "실시간"은 이미 있는 종목별
+                 market_open 상태를 재사용(장중인 것만), "최근 본"은 상세로 열어본
+                 종목의 최근순 로컬 기록(state.js의 getRecentlyViewed/pushRecentlyViewed). -->
+            <div class="seg-group trade-allowlist-subtabs" id="trade-allowlist-subtabs">
+              <button type="button" class="seg-btn active" data-subtab="favorites" data-i18n="tradeAllowlistSubFavorites"></button>
+              <button type="button" class="seg-btn" data-subtab="recent" data-i18n="tradeAllowlistSubRecent"></button>
+              <button type="button" class="seg-btn" data-subtab="live" data-i18n="tradeAllowlistSubLive"></button>
+            </div>
+            <!-- 관심종목 패널 전용 추가 입력창 — 종목명/코드 타입어헤드(tickersearch.js).
+                 드롭다운 DOM은 여기 두지 않고 JS가 document.body에 붙인다
+                 (.trade-allowlist-panel이 overflow:hidden 이라 패널 안에 두면 잘림). -->
+            <div class="trade-allowlist-add-row">
+              <input type="search" id="trade-allowlist-add-input" role="combobox"
+                     aria-expanded="false" aria-autocomplete="list" aria-controls="ticker-search-pop"
+                     data-i18n-placeholder="tradeAllowlistAddPlaceholder" placeholder="종목명 또는 코드 검색" autocomplete="off">
+              <button type="button" id="trade-allowlist-add-btn" data-i18n="tradeAllowlistAddButton"></button>
+            </div>
+          </div>
+          <div class="trade-allowlist-panel-rows">
+            <div class="empty" id="trade-allowlist-subtab-empty" data-i18n="tradeAllowlistSubRecentEmpty" hidden></div>
+            <div id="cards"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- center: selected ticker's detail (chart/AI진단/호가/실적/뉴스) —
+           was a popup modal, now always inline (mockup shows both at once,
+           no popup). -->
+      <div class="trading-detail-col">
+        <div class="panel empty" id="detail-modal-empty" data-i18n="detailModalEmpty"></div>
+        <div class="panel" id="detail-modal" hidden>
+          <div class="modal-head">
+            <div>
+              <div class="modal-name" id="detail-name"></div>
+              <div class="modal-symbol" id="detail-symbol"></div>
+            </div>
+            <div class="modal-price-block">
+              <span class="modal-price tabular" id="detail-price"></span>
+              <span class="delta flat" id="detail-delta">—</span>
+            </div>
+            <!-- 목업의 상시노출 "AI 진단" 압축 라인 — 이미 내려온 과거 결정(있으면)만
+                 재사용, 새로 분석 안 돌림. 없으면 숨김(trading.js의 renderCompactAiDiagnosis). -->
+            <div class="ai-diag-compact" id="ai-diag-compact" hidden>
+              <div class="ai-diag-compact-head">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 13.9 9.1 20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"></path></svg>
+                <span class="ai-diag-compact-label" data-i18n="aiDiagCompactLabel"></span>
+                <span class="signal-manual-badge ai-diag-compact-manual" id="ai-diag-compact-manual" hidden data-i18n="signalManualBadge"></span>
+                <span class="ai-diag-compact-pill" id="ai-diag-compact-pill"></span>
+              </div>
+              <!-- action_label(실제 매수/매도 방향, 지금 pill에 표시됨)과 AI 등급이
+                   다를 수 있어서(예: "비중 축소"인데 실제론 매수) 등급도 같이 보여줌. -->
+              <div class="ai-diag-compact-rating-hint" id="ai-diag-compact-rating-hint" hidden></div>
+              <p class="ai-diag-compact-reason" id="ai-diag-compact-reason"></p>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="analyze-btn" id="detail-analyze" data-i18n="detailAnalyzeBtn"></button>
+            <span class="analyze-status" id="detail-analyze-status"></span>
+          </div>
+          <div class="analyze-pipeline" id="analyze-pipeline" hidden>
+            <ol class="analyze-pipeline-steps" id="analyze-pipeline-steps">
+              <li class="ap-step" data-stage="analysts"><span class="ap-step-dot" aria-hidden="true"></span><span class="ap-step-label" data-i18n="deskChainAnalysts"></span></li>
+              <li class="ap-step" data-stage="debate"><span class="ap-step-dot" aria-hidden="true"></span><span class="ap-step-label" data-i18n="deskChainDebate"></span></li>
+              <li class="ap-step" data-stage="research"><span class="ap-step-dot" aria-hidden="true"></span><span class="ap-step-label" data-i18n="pipelineStageResearch"></span></li>
+              <li class="ap-step" data-stage="trader"><span class="ap-step-dot" aria-hidden="true"></span><span class="ap-step-label" data-i18n="pipelineStageTrader"></span></li>
+              <li class="ap-step" data-stage="risk"><span class="ap-step-dot" aria-hidden="true"></span><span class="ap-step-label" data-i18n="deskChainRisk"></span></li>
+              <li class="ap-step" data-stage="pm"><span class="ap-step-dot" aria-hidden="true"></span><span class="ap-step-label" data-i18n="deskChainPm"></span></li>
+              <li class="ap-step" data-stage="execution"><span class="ap-step-dot" aria-hidden="true"></span><span class="ap-step-label" data-i18n="pipelineStageExecution"></span></li>
+            </ol>
+            <div class="analyze-pipeline-caption" id="analyze-pipeline-caption" aria-live="polite"></div>
+          </div>
+          <div id="detail-analysis" hidden></div>
+
+          <!-- 목업의 펀더멘털 요약행 — 고가/저가/거래량(당일)+시가총액/PER/PBR(+해외는
+               52주 고저). 배당수익률/외국인지분은 KIS API 자체가 없어 뺌(지어내지 않음). -->
+          <div class="fund-summary" id="fund-summary"></div>
+
+          <div id="detail-period-wrap" hidden>
+            <div class="rank-head">
+              <h3 class="detail-section-title" style="margin:0" data-i18n="periodChartTitle"></h3>
+              <div class="rank-modes" id="period-modes">
+                <button type="button" class="rank-mode" data-period="MIN" data-i18n="periodMinute"></button>
+                <button type="button" class="rank-mode active" data-period="D" data-i18n="periodDay"></button>
+                <button type="button" class="rank-mode" data-period="W" data-i18n="periodWeek"></button>
+                <button type="button" class="rank-mode" data-period="M" data-i18n="periodMonth"></button>
+                <button type="button" class="rank-mode" data-period="Y" data-i18n="periodYear"></button>
+              </div>
+            </div>
+            <div class="period-chart">
+              <!-- 캔버스는 시각 렌더링 전용. 수치는 아래 #period-labels(OHLC/거래량)와
+                   #period-axis-y가 텍스트로 갖고 있으므로 aria-label은 "여기 무엇이
+                   있는지"만 알리는 정적 문구 — drawCandles()에서 동적으로 갱신하지 말 것
+                   (호버마다 호출되고, .mc-labels와 내용이 완전히 중복됨). -->
+              <canvas id="period-canvas" role="img" data-i18n-aria-label="periodChartAria"></canvas>
+              <div class="axis-y period-axis-y" id="period-axis-y"></div>
+            </div>
+            <div class="mc-labels" id="period-labels"></div>
+          </div>
+
+          <!-- 아래 4개(호가/실적추이/국내지표/뉴스)는 기본 접힘 <details> — 상세 컬럼에
+               섹션이 7~8개 쌓여 한 화면에 안 들어오던 문제(2026-08-19). 주 흐름
+               (종목정체성 → AI분석 → 펀더멘털 → 기간차트)은 그대로 상시 노출.
+               id는 그대로 유지해야 setupDetailExtras의 국내/해외 .hidden 분기가
+               손대지 않고 그대로 동작한다. 접혀 있어도 데이터는 미리 받아 둠. -->
+          <details id="detail-orderbook-wrap" hidden>
+            <summary class="detail-section-title"><span data-i18n="orderbookTitle"></span> <span class="hint" id="ob-status" data-i18n="orderbookHintDefault"></span></summary>
+            <div class="orderbook" id="detail-orderbook"></div>
+          </details>
+
+          <!-- yfinance-backed: US/non-KRX tickers only. KRX tickers get the
+               equivalent (and more accurate) data from the KR-insights panel
+               below ("financials"/"news" tabs, both KIS-sourced) instead —
+               see setupDetailExtras. -->
+          <details id="detail-earnings-wrap" hidden>
+            <summary class="detail-section-title" data-i18n="earningsTrendTitle"></summary>
+            <div class="earnings-block">
+              <div class="earnings-chart-head">
+                <span class="earnings-chart-label" data-i18n="epsLabel"></span>
+              </div>
+              <div class="earnings-info-line" id="eps-info-line"></div>
+              <div class="eps-chart-wrap">
+                <canvas class="eps-chart" id="eps-canvas" aria-hidden="true"></canvas>
+                <div class="axis-y" id="eps-axis-y"></div>
+              </div>
+              <div class="axis-x" id="eps-axis-x"></div>
+
+              <div class="earnings-chart-head" style="margin-top: 1.75rem;">
+                <span class="earnings-chart-label" data-i18n="revLabel"></span>
+                <div class="period-toggle" id="revenue-period-toggle">
+                  <button type="button" class="active" data-period="quarterly" data-i18n="periodQuarterly"></button>
+                  <button type="button" data-period="annual" data-i18n="periodAnnual"></button>
+                </div>
+              </div>
+              <div class="earnings-info-line" id="rev-info-line"></div>
+              <div class="rev-chart-wrap">
+                <canvas class="rev-chart" id="rev-canvas" aria-hidden="true"></canvas>
+                <div class="axis-y" id="rev-axis-y"></div>
+              </div>
+              <div class="axis-x" id="rev-axis-x"></div>
+
+              <div class="estimate-tables">
+                <div>
+                  <h4 data-i18n="revenueEstimateTitle"></h4>
+                  <div class="estimate-table-wrap" id="revenue-estimate-table"></div>
+                </div>
+                <div>
+                  <h4 data-i18n="earningsEstimateTitle"></h4>
+                  <div class="estimate-table-wrap" id="earnings-estimate-table"></div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details id="detail-kr-insights" hidden>
+            <summary class="detail-section-title" data-i18n="krInsightsTitle"></summary>
+            <div class="kr-tabs" id="kr-tabs" role="tablist">
+              <button class="kr-tab active" data-kr="investor-flow" data-i18n="krTabInvestorFlow"></button>
+              <button class="kr-tab" data-kr="financials" data-i18n="krTabFinancials"></button>
+              <button class="kr-tab" data-kr="opinion" data-i18n="krTabOpinion"></button>
+              <button class="kr-tab" data-kr="risk" data-i18n="krTabRisk"></button>
+              <button class="kr-tab" data-kr="news" data-i18n="krTabNews"></button>
+            </div>
+            <div class="kr-panel" id="kr-panel" data-i18n="loading"></div>
+          </details>
+
+          <!-- yfinance-backed: US/non-KRX tickers only, same reasoning as
+               detail-earnings-wrap above (KR-insights' "news" tab covers KRX). -->
+          <details id="detail-news-wrap" hidden>
+            <summary class="detail-section-title" data-i18n="newsTitle"></summary>
+            <div class="news-grid" id="detail-news"></div>
+          </details>
+        </div>
+      </div>
+
+      <!-- 주문 (order ticket) — bound to whichever ticker is selected above
+           (openDetail keeps #order-ticker in sync); dropdown stays as a
+           manual override, not removed. 3번째 컬럼으로 분리되어 가격/차트를
+           보면서 주문할 수 있다(2026-08-18 — 예전엔 상세와 같은 컬럼에 쌓여
+           있어서 주문 버튼이 폴드 아래로 밀렸었음). -->
+      <div class="trading-order-col">
+        <div class="panel trading-order-panel" id="tab-order">
+          <div class="order-ticket">
+            <div class="order-mode-row">
+              <span class="order-mode-badge" id="order-mode-badge" data-i18n="orderModeChecking"></span>
+            </div>
+            <div class="order-side-toggle" id="order-side-toggle">
+              <button type="button" class="oside active" data-side="buy" data-i18n="buy"></button>
+              <button type="button" class="oside" data-side="sell" data-i18n="sell"></button>
+            </div>
+            <label class="order-field">
+              <span data-i18n="orderFieldTicker"></span>
+              <select id="order-ticker"></select>
+            </label>
+            <div class="order-type-toggle" id="order-type-toggle">
+              <button type="button" class="otype active" data-type="market" data-i18n="orderTypeMarket"></button>
+              <button type="button" class="otype" data-type="limit" data-i18n="orderTypeLimit"></button>
+            </div>
+            <label class="order-field" id="order-price-field" style="display:none">
+              <span data-i18n="orderFieldLimitPrice"></span>
+              <input id="order-limit-price" type="number" min="0" step="1" inputmode="decimal" data-i18n-placeholder="orderLimitPricePlaceholder">
+            </label>
+            <label class="order-field">
+              <span data-i18n="orderFieldShares"></span>
+              <input id="order-shares" type="number" min="1" step="1" inputmode="numeric" data-i18n-placeholder="orderSharesPlaceholder">
+            </label>
+            <div class="order-qty-quick" id="order-qty-quick">
+              <button type="button" class="oqty" data-pct="0.1" data-i18n="orderQtyQuick10"></button>
+              <button type="button" class="oqty" data-pct="0.25" data-i18n="orderQtyQuick25"></button>
+              <button type="button" class="oqty" data-pct="0.5" data-i18n="orderQtyQuick50"></button>
+              <button type="button" class="oqty" data-pct="1" data-i18n="orderQtyQuickMax"></button>
+            </div>
+            <div class="order-estimate" id="order-estimate">
+              <span class="oest-label" data-i18n="orderEstimateLabel"></span>
+              <span class="oest-value" id="order-estimate-value">—</span>
+            </div>
+            <div class="order-avail" id="order-avail">—</div>
+            <button type="button" class="order-submit" id="order-submit"></button>
+            <div class="order-result" id="order-result" hidden></div>
+          </div>
+          <h3 class="detail-section-title" style="margin-top:1.5rem" data-i18n="openOrdersTitle"></h3>
+          <div id="open-orders"><div class="empty" data-i18n="openOrdersEmpty"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- everything below has no matching spot in the mockup — kept, just
+         de-prioritized under the 관심종목/상세/주문 block above. 순위표는
+         2026-08-18에 트레이딩 탭 하단 서브탭(#trading-subtabs)으로 이동(#tab-rank 참조). -->
+
+    <!-- 보유종목 패널 제거(2026-08-19) — 아래 "포트폴리오 상세" 서브탭이 같은
+         /api/portfolio 행을 등급·손절여유·비중·평가금액·정렬·합계까지 얹어 보여줘
+         완전한 상위호환이었음. 유일하게 빠져 있던 "행 클릭 → 상세 열기"는
+         renderPortfolioTable로 옮겨 붙였다. -->
+
+    <div class="tabs" id="trading-subtabs" role="tablist">
+      <button class="tab active" data-tab="tab-pending" data-i18n="tabPending"></button>
+      <button class="tab" data-tab="tab-trades" data-i18n="tabTrades"></button>
+      <button class="tab" data-tab="tab-feed" data-i18n="feedTitle"></button>
+      <button class="tab" data-tab="tab-pnl" data-i18n="tabPnl"></button>
+      <button class="tab" data-tab="tab-portfolio" data-i18n="tabPortfolio"></button>
+      <button class="tab" data-tab="tab-rank" data-i18n="tabRank"></button>
+      <button class="tab" data-tab="tab-accuracy" data-i18n="tabAccuracy"></button>
+    </div>
+
+    <div class="panel tab-panel" id="tab-pending">
+      <h2 class="sec" style="margin-top:0"><span data-i18n="tabPending"></span> <span class="cnt" id="pending-count"></span></h2>
+      <div id="pending-orders"><div class="empty" data-i18n="pendingOrdersEmpty"></div></div>
+      <h3 class="detail-section-title" data-i18n="pendingHistoryTitle"></h3>
+      <div id="pending-orders-history"><div class="empty" data-i18n="pendingHistoryEmpty"></div></div>
+    </div>
+
+    <div class="panel tab-panel" id="tab-trades" hidden style="overflow-x: auto;">
+      <h2 class="sec" style="margin-top:0"><span data-i18n="tabTrades"></span> <span class="cnt" id="trades-count"></span></h2>
+      <table class="portfolio-table">
+        <thead>
+          <tr>
+            <th data-i18n="thDate"></th><th data-i18n="thSide"></th><th data-i18n="thSymbol"></th><th class="num" data-i18n="thQty"></th>
+            <th class="num" data-i18n="thFillPrice"></th><th data-i18n="thStatus"></th><th data-i18n="thVenue"></th><th data-i18n="thReason"></th>
+          </tr>
+        </thead>
+        <tbody id="trades-body"><tr><td colspan="8"><div class="empty" data-i18n="tradesEmpty"></div></td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="panel tab-panel" id="tab-feed" hidden>
+      <h2 class="sec" style="margin-top:0"><span data-i18n="feedTitle"></span> <span class="cnt" id="feed-count"></span></h2>
+      <div id="feed"><div class="empty" data-i18n="feedEmpty"></div></div>
+    </div>
+
+    <!-- 매매손익(실현손익) — KIS 체결내역 기준 기간별 매수/매도 짝지어 손익 계산
+         (app.execution.pnl). 국내/해외 구분은 새 토글 없이 사이드바의 기존 전역
+         스코프(#market-scope-toggle)를 그대로 재사용(다른 탭들과 동일 패턴, renderPnl에서 필터링). -->
+    <div class="panel tab-panel" id="tab-pnl" hidden style="overflow-x: auto;">
+      <h2 class="sec" style="margin-top:0"><span data-i18n="tabPnl"></span></h2>
+      <div class="pnl-controls">
+        <label class="pnl-date-field">
+          <span data-i18n="pnlStartLabel"></span>
+          <input type="date" id="pnl-start-input">
+        </label>
+        <label class="pnl-date-field">
+          <span data-i18n="pnlEndLabel"></span>
+          <input type="date" id="pnl-end-input">
+        </label>
+        <button type="button" id="pnl-query-btn" data-i18n="pnlQueryButton"></button>
+      </div>
+      <div class="empty" id="pnl-clamp-banner" hidden data-i18n="pnlClampedNotice"></div>
+      <div class="empty" id="pnl-fee-unavailable-overseas-banner" hidden data-i18n="pnlFeeUnavailableOverseasNotice"></div>
+      <div class="pnl-summary" id="pnl-summary" style="display:none;">
+        <div><div class="label" data-i18n="pnlSummaryTotal"></div><div class="value" id="pnl-summary-total">—</div></div>
+        <div><div class="label" data-i18n="pnlSummaryFeeTax"></div><div class="value" id="pnl-summary-fee-tax">—</div></div>
+        <div><div class="label" data-i18n="pnlSummaryNetTotal"></div><div class="value" id="pnl-summary-net-total">—</div></div>
+        <div><div class="label" data-i18n="pnlSummaryWinRate"></div><div class="value" id="pnl-summary-winrate">—</div></div>
+      </div>
+      <table class="portfolio-table">
+        <thead>
+          <tr>
+            <th data-i18n="thSymbol"></th>
+            <th data-i18n="pnlSellDate"></th>
+            <th class="num" data-i18n="thQty"></th>
+            <th class="num" data-i18n="pnlBuyAvgPrice"></th>
+            <th class="num" data-i18n="pnlSellPrice"></th>
+            <!-- 손익/순손익은 각각 "금액 (퍼센트)" 한 칸으로 합쳐 표시(renderPnl) —
+                 따로 있던 % 열 두 개는 뺌. thPnlPct/pnlNetPnlPct 키 자체는
+                 포트폴리오·순위표가 계속 쓰므로 삭제하지 말 것. -->
+            <th class="num" data-i18n="thPnl"></th>
+            <th class="num" data-i18n="pnlFeeTax"></th>
+            <th class="num" data-i18n="pnlNetPnl"></th>
+          </tr>
+        </thead>
+        <tbody id="pnl-body"><tr><td colspan="8"><div class="empty" data-i18n="pnlEmpty"></div></td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="panel tab-panel" id="tab-portfolio" hidden style="overflow-x: auto;">
+      <h2 class="sec" style="margin-top:0"><span data-i18n="tabPortfolio"></span> <span class="cnt" id="portfolio-count"></span></h2>
+      <!-- Scope-aware account summary — mirrors the sidebar hero's numbers
+           but shows only the currently active 국내/해외 scope (not both at
+           once), matching the table below it which is already filtered the
+           same way. See renderPortfolioSummaryCard. -->
+      <div class="hero" id="portfolio-summary" style="display:none; margin-bottom:1rem;">
+        <div class="hero-accounts" style="grid-template-columns:1fr;">
+          <div class="acct">
+            <!-- 원화 환산 토글 — 트레이딩 탭 히어로에서 이곳으로 이전(2026-08-18).
+                 이 카드는 활성 스코프 하나만 보여주므로 해외일 때만 노출(hidden 토글).
+                 요소 자체는 절대 DOM에서 빼지 말 것 — trading.js가 모듈 최상위에서
+                 이 id에 리스너를 건다. data-i18n은 일부러 없음(applyStaticI18n이
+                 방향과 무관하게 늘 "⇄ KRW"로 덮어쓰므로, applyFxToggleButton이 단독
+                 소유). -->
+            <div class="acct-head">
+              <span class="scope" id="portfolio-summary-scope">—</span>
+              <button class="fx-toggle" id="fx-toggle" type="button" hidden></button>
+            </div>
+            <div class="acct-body-row">
+              <div>
+                <div class="label" data-i18n="heroTotalLabel">총평가금액</div>
+                <div class="total" id="portfolio-summary-total">—</div>
+                <span class="delta-pill" id="portfolio-summary-pnl-pill">—</span>
+              </div>
+              <div class="eval-line"><span class="label" data-i18n="heroEvalLabel">평가금액</span><span class="value" id="portfolio-summary-eval">—</span></div>
+            </div>
+            <div class="mini">
+              <div><div class="label" id="portfolio-summary-cash-label">예수금</div><div class="value" id="portfolio-summary-cash">—</div></div>
+              <div><div class="label" data-i18n="heroInvestedLabel">매입금액</div><div class="value" id="portfolio-summary-invested">—</div></div>
+              <div><div class="label" id="portfolio-summary-d2cash-label">D+2예수금</div><div class="value" id="portfolio-summary-d2cash">—</div></div>
+              <div><div class="label" data-i18n="heroPositionsLabel">보유종목</div><div class="value" id="portfolio-summary-positions">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <table class="portfolio-table">
+        <thead id="portfolio-head">
+          <tr>
+            <th class="sortable" data-sort-key="name"><button type="button" class="th-sort-btn"><span data-i18n="thSymbol"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="sortable" data-sort-key="rating"><button type="button" class="th-sort-btn"><span data-i18n="thRating"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="shares"><button type="button" class="th-sort-btn"><span data-i18n="thQty"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="avg_price"><button type="button" class="th-sort-btn"><span data-i18n="thAvgPrice"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="current_price"><button type="button" class="th-sort-btn"><span data-i18n="thCurPrice"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="stop_loss"><button type="button" class="th-sort-btn"><span data-i18n="thStopLoss"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="pnl_amount"><button type="button" class="th-sort-btn"><span data-i18n="thPnl"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="pnl_pct"><button type="button" class="th-sort-btn"><span data-i18n="thPnlPct"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="weight_pct"><button type="button" class="th-sort-btn"><span data-i18n="thWeightPct"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+            <th class="num sortable" data-sort-key="market_value"><button type="button" class="th-sort-btn"><span data-i18n="thMarketValue"></span><span class="sort-ind" aria-hidden="true"></span></button></th>
+          </tr>
+        </thead>
+        <tbody id="portfolio-body"></tbody>
+      </table>
+    </div>
+
+    <!-- live rank screener — 트레이딩 탭 히어로 아래(항상 노출)였다가 트레이딩 탭 하단
+         서브탭으로 이동(2026-08-18) — 백엔드가 스크리닝을 자동으로 하는
+         제품에서 "직접 훑어보는 순위표"는 역할이 애매했고, 유일한 실사용
+         동선(추가 버튼)은 관심종목 패널 입력창이 이미 커버함(헤더 검색은 2026-08-19 삭제).
+         loadRank()는 main.js에서 탭 가시성과 무관하게 계속 폴링하므로
+         (60초 간격) 여기로 옮겨도 데이터는 항상 최신 상태로 유지됨. -->
+    <div class="panel tab-panel" id="tab-rank" hidden style="overflow-x:auto">
+      <h2 class="sec" style="margin-top:0" data-i18n="tabRank"></h2>
+      <div class="rank-head">
+        <div class="rank-modes" id="rank-modes">
+          <button type="button" class="rank-mode active" data-mode="volume" data-i18n="rankModeVolume"></button>
+          <button type="button" class="rank-mode" data-mode="value" data-i18n="rankModeValue"></button>
+          <button type="button" class="rank-mode" data-mode="up" data-i18n="rankModeUp"></button>
+          <button type="button" class="rank-mode" data-mode="down" data-i18n="rankModeDown"></button>
+          <button type="button" class="rank-mode" data-mode="sector" data-i18n="rankModeSector"></button>
+        </div>
+        <button type="button" class="rank-refresh" id="rank-refresh" data-i18n="rankRefresh"></button>
+      </div>
+      <table class="portfolio-table" id="rank-table">
+        <thead>
+          <tr><th>#</th><th data-i18n="thSymbol"></th><th class="num" data-i18n="thCurPrice"></th><th class="num" data-i18n="thPnlPct"></th><th class="num" data-i18n="rankVolumeCol"></th><th></th></tr>
+        </thead>
+        <tbody id="rank-body"><tr><td colspan="6"><div class="empty" data-i18n="loading"></div></td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- 적중률 — AI 판단의 실현 결과 자체 감사(app.audit.stats / app.audit.weekly).
+         읽기 전용, DB만 조회 — /api/audit/accuracy, /api/audit/weekly.
+         국내/해외는 사이드바 전역 스코프(#market-scope-toggle)를 쓰지 않고 이 패널
+         전용 필터(#accuracy-market)를 둔다 — 이 화면은 "전체 통합" 집계가 1급
+         보기이고(백엔드 market=None 기본값), 전역 스코프에는 그 상태가 없다.
+         그래서 refreshOtherTabScope()에도 넣지 않는다(의도된 것, 누락 아님).
+         Stage 3(#accuracy-stage3)은 마크업만 미리 두고 hidden — 사용자에게
+         "준비 중" 빈 표를 노출하지 않기 위해. Stage 3에서 hidden 속성만 제거. -->
+    <div class="panel tab-panel" id="tab-accuracy" hidden style="overflow-x: auto;">
+      <h2 class="sec" style="margin-top:0">
+        <span data-i18n="tabAccuracy"></span>
+        <span class="hint" data-i18n="accuracyPanelHint"></span>
+      </h2>
+
+      <div class="accuracy-filters">
+        <span class="accuracy-filter-label" data-i18n="accuracyFilterMarket"></span>
+        <div class="seg-group" id="accuracy-market">
+          <button type="button" class="seg-btn active" data-value="all" data-i18n="accuracyMarketAll"></button>
+          <button type="button" class="seg-btn" data-value="domestic" data-i18n="scopeDomesticShort"></button>
+          <button type="button" class="seg-btn" data-value="overseas" data-i18n="scopeOverseasShort"></button>
+        </div>
+        <span class="accuracy-filter-label" data-i18n="accuracyFilterScope"></span>
+        <div class="seg-group" id="accuracy-scope">
+          <button type="button" class="seg-btn active" data-value="live" data-i18n="accuracyScopeLive"></button>
+          <button type="button" class="seg-btn" data-value="backtest" data-i18n="accuracyScopeBacktest"></button>
+        </div>
+        <span class="accuracy-filter-label" data-i18n="accuracyFilterBasis"></span>
+        <div class="seg-group" id="accuracy-basis">
+          <button type="button" class="seg-btn active" data-value="variable" data-i18n="accuracyBasisVariable"></button>
+          <button type="button" class="seg-btn" data-value="horizon" data-i18n="accuracyBasisHorizon"></button>
+        </div>
+      </div>
+
+      <!-- 계좌모드는 쿼리 파라미터가 아님(라우터 docstring) — 응답이 알려주는
+           현재 활성 모드를 그대로 라벨로 표시. .seg-badge = 읽기전용 배지. -->
+      <div class="accuracy-meta" id="accuracy-meta">
+        <span class="seg-badge" id="accuracy-account-mode" hidden></span>
+        <span id="accuracy-threshold-hint"></span>
+      </div>
+
+      <div class="accuracy-kpis" id="accuracy-kpis" style="display:none;">
+        <div><div class="label" data-i18n="accuracyKpiDirectionalN"></div><div class="value" id="accuracy-kpi-n">—</div></div>
+        <div><div class="label" data-i18n="accuracyKpiWinRate"></div><div class="value" id="accuracy-kpi-winrate">—</div></div>
+        <div><div class="label" data-i18n="accuracyKpiUnscoredHold"></div><div class="value" id="accuracy-kpi-unscored">—</div></div>
+        <div><div class="label" data-i18n="accuracyKpiExcluded"></div><div class="value" id="accuracy-kpi-excluded">—</div></div>
+      </div>
+
+      <h3 class="detail-section-title" data-i18n="accuracyRatingTableTitle"></h3>
+      <table class="portfolio-table" id="accuracy-rating-table">
+        <thead>
+          <tr>
+            <th data-i18n="accuracyThRating"></th>
+            <th class="num" data-i18n="accuracyThN"></th>
+            <th class="num" data-i18n="accuracyThWinRate"></th>
+            <th class="num" data-i18n="accuracyThMeanAlpha"></th>
+            <th class="num" data-i18n="accuracyThStdevAlpha"></th>
+            <th class="num" data-i18n="accuracyThMeanRaw"></th>
+            <th data-i18n="accuracyThWinCondition"></th>
+            <th class="num" data-i18n="accuracyThExcluded"></th>
+          </tr>
+        </thead>
+        <tbody id="accuracy-rating-body"><tr><td colspan="8"><div class="empty" data-i18n="loading"></div></td></tr></tbody>
+      </table>
+      <p class="accuracy-footnote" data-i18n="accuracyRatingFootnote"></p>
+
+      <!-- ===== Stage 3 — 확신도/주간추이/F7/토론영향. hidden 으로 시작하고 JS가
+           첫 렌더에서 연다(_revealAccuracyStage3) — 데이터 성공 여부와 무관하게 열고,
+           각 표는 자기 tbody 안에 로딩/오류/빈 상태를 그린다. ===== -->
+      <div id="accuracy-stage3" hidden>
+        <h3 class="detail-section-title" data-i18n="accuracyConfidenceTableTitle"></h3>
+        <table class="portfolio-table" id="accuracy-confidence-table">
+          <thead>
+            <tr>
+              <th data-i18n="accuracyThBand"></th>
+              <th class="num" data-i18n="accuracyThSizeMultiplier"></th>
+              <th class="num" data-i18n="accuracyThN"></th>
+              <th class="num" data-i18n="accuracyThWinRate"></th>
+              <th class="num" data-i18n="accuracyThMeanSignedAlpha"></th>
+              <th class="num" data-i18n="accuracyThExcluded"></th>
+            </tr>
+          </thead>
+          <tbody id="accuracy-confidence-body"></tbody>
+        </table>
+        <p class="accuracy-footnote" id="accuracy-confidence-footnote"></p>
+
+        <h3 class="detail-section-title" data-i18n="accuracyWeeklyTableTitle"></h3>
+        <div class="accuracy-meta" id="accuracy-weekly-meta"></div>
+        <table class="portfolio-table" id="accuracy-weekly-table">
+          <thead>
+            <tr>
+              <th data-i18n="accuracyThRating"></th>
+              <th class="num" data-i18n="accuracyThThisWeek"></th>
+              <th class="num" data-i18n="accuracyThLast8Weeks"></th>
+              <th class="num" data-i18n="accuracyThCumulative"></th>
+            </tr>
+          </thead>
+          <tbody id="accuracy-weekly-body"></tbody>
+        </table>
+        <p class="accuracy-footnote" id="accuracy-weekly-footnote"></p>
+
+        <h3 class="detail-section-title" data-i18n="accuracyF7TableTitle"></h3>
+        <table class="portfolio-table" id="accuracy-f7-table">
+          <thead>
+            <tr>
+              <th data-i18n="accuracyThF7Row"></th>
+              <th class="num" data-i18n="accuracyThN"></th>
+              <th class="num" data-i18n="accuracyThWins"></th>
+              <th class="num" data-i18n="accuracyThWinRate"></th>
+            </tr>
+          </thead>
+          <tbody id="accuracy-f7-body"></tbody>
+        </table>
+        <p class="accuracy-footnote" id="accuracy-f7-footnote"></p>
+
+        <h3 class="detail-section-title" data-i18n="accuracyDebateTitle"></h3>
+        <div class="accuracy-kpis" id="accuracy-debate-kpis">
+          <div><div class="label" data-i18n="accuracyDebateN"></div><div class="value" id="accuracy-debate-n">—</div></div>
+          <div><div class="label" data-i18n="accuracyDebateChanged"></div><div class="value" id="accuracy-debate-changed">—</div></div>
+        </div>
+        <div class="accuracy-breakdown" id="accuracy-debate-breakdown"></div>
+        <p class="accuracy-footnote" id="accuracy-debate-footnote"></p>
+      </div>
+    </div>
+  </div>
+      </div><!-- /nav-trading -->
+
+      <!-- 어시스턴트 tab: matches the mockup's AI 챗. -->
+      <div class="nav-panel" id="nav-assistant" hidden>
+  <div class="wrap">
+    <div class="panel" id="tab-chat">
+      <div id="chat-log"></div>
+      <div class="chat-composer">
+        <input id="chat-input" class="chat-composer-input" data-i18n-placeholder="chatPlaceholder">
+        <div class="chat-input-row">
+          <button id="chat-new" class="chat-icon-btn" type="button" data-i18n-aria-label="chatNewAria" aria-label="">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+          <button class="chat-model-badge" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" class="chat-model-badge-icon"><path d="M12 3 13.9 9.1 20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"></path></svg>
+            <span data-i18n="chatModelLabel"></span>
+          </button>
+          <div class="chat-spacer"></div>
+          <span class="chat-send-hint" data-i18n="chatSendHint"></span>
+          <button id="chat-send" class="chat-send-btn" type="button" data-i18n-aria-label="chatSend" aria-label="">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chat-disclaimer" data-i18n="chatDisclaimer"></div>
+    </div>
+  </div>
+      </div><!-- /nav-assistant -->
+
+      <!-- 설정 entry: 연결 상태/매매환경/리스크룰/안전배지. 판단 이력/알림 tabs are
+           still hidden (not removed) — still updated in the background, just not
+           reachable from the tab bar. -->
+      <div class="nav-panel" id="nav-settings" hidden>
+  <div class="wrap">
+          <div class="order-ticket">
+            <h3 class="detail-section-title" style="margin-top:0" data-i18n="settingsConnStatusTitle"></h3>
+            <!-- 헤더 통합(목업 매칭) 과정에서 옮겨온 것 — 목업엔 없는 진단 정보라 설정
+                 탭으로 이동. id는 그대로라 기존 폴링 코드는 안 건드림. -->
+            <div class="seg-row" style="flex-wrap:wrap; gap:0.6rem 1rem;">
+              <span class="auto-trade-pill" id="auto-trade-pill" hidden><span class="dot"></span><span id="auto-trade-pill-text"></span></span>
+              <span class="kis-pill" id="kis-pill" data-i18n="kisConnected"></span>
+              <span class="live-pill"><span class="live-dot" id="live-dot"></span><span id="live-label" data-i18n="connecting"></span></span>
+            </div>
+          </div>
+          <div class="order-ticket" style="margin-top:1.2rem">
+            <h3 class="detail-section-title" style="margin-top:0" data-i18n="settingsTradingEnvTitle"></h3>
+            <p class="hint" style="margin:.2rem 0 1rem" data-i18n="settingsTradingEnvHint"></p>
+            <div class="seg-row"><span data-i18n="settingsAiProfileLabel"></span>
+              <div class="seg-group" id="rt-ai-profile">
+                <button type="button" class="seg-btn" data-key="ai_profile" data-value="production" data-i18n="aiProfileProduction"></button>
+                <button type="button" class="seg-btn" data-key="ai_profile" data-value="test_aggressive" data-i18n="aiProfileTestAggressive"></button>
+                <button type="button" class="seg-btn" data-key="ai_profile" data-value="debug" data-i18n="aiProfileDebug"></button>
+              </div>
+            </div>
+            <!-- 헤더 폐지(2026-08-19)로 매매모드 토글이 다시 여기 하나뿐인 실제
+                 컨트롤 — 사이드바엔 읽기전용 텍스트(#sidebar-exec-mode-text)만 있음. -->
+            <div class="seg-row"><span data-i18n="settingsExecModeLabel"></span>
+              <div class="seg-group" id="rt-execution-mode">
+                <button type="button" class="seg-btn" data-key="execution_mode" data-value="manual" data-i18n="execModeManual"></button>
+                <button type="button" class="seg-btn" data-key="execution_mode" data-value="semi_auto" data-i18n="execModeSemiAuto"></button>
+                <button type="button" class="seg-btn" data-key="execution_mode" data-value="full_auto" data-i18n="execModeFullAutoShort"></button>
+              </div>
+            </div>
+            <div class="seg-row"><span data-i18n="settingsAccountModeLabel"></span>
+              <span class="seg-badge" id="rt-account-mode" data-i18n="settingsChecking"></span>
+            </div>
+            <div class="order-result" id="rt-result" hidden></div>
+          </div>
+          <div class="order-ticket" style="margin-top:1.2rem">
+            <h3 class="detail-section-title" style="margin-top:0" data-i18n="settingsRiskRulesTitle"></h3>
+            <p class="hint" style="margin:.2rem 0 1rem" data-i18n="settingsRiskRulesHint"></p>
+            <label class="order-field"><span data-i18n="riskMaxOrderKrw"></span>
+              <input id="rr-max-krw" type="number" min="0" step="100000" inputmode="numeric"></label>
+            <label class="order-field"><span data-i18n="riskMaxOrderUsd"></span>
+              <input id="rr-max-usd" type="number" min="0" step="100" inputmode="numeric"></label>
+            <label class="rr-toggle"><input id="rr-pct-enabled" type="checkbox"><span data-i18n="riskPctEnabled"></span></label>
+            <label class="order-field"><span data-i18n="riskMaxPct"></span>
+              <input id="rr-pct" type="number" min="0" max="100" step="1" inputmode="numeric"></label>
+            <label class="rr-toggle"><input id="rr-approval-enabled" type="checkbox"><span data-i18n="riskApprovalEnabled"></span></label>
+            <label class="order-field"><span data-i18n="riskApprovalKrw"></span>
+              <input id="rr-approval-krw" type="number" min="0" step="100000" inputmode="numeric"></label>
+            <label class="order-field"><span data-i18n="riskApprovalUsd"></span>
+              <input id="rr-approval-usd" type="number" min="0" step="100" inputmode="numeric"></label>
+            <button type="button" class="order-submit" id="rr-save" data-i18n="riskSaveBtn"></button>
+            <div class="order-result" id="rr-result" hidden></div>
+          </div>
+          <div class="order-ticket" style="margin-top:1.2rem">
+            <h3 class="detail-section-title" style="margin-top:0" data-i18n="settingsSafetyTitle"></h3>
+            <p class="hint" style="margin:.2rem 0 1rem" data-i18n="settingsSafetyHint"></p>
+            <div class="safety-row"><span data-i18n="safetyKillSwitchLabel"></span><span class="safety-badge" id="safety-kill-badge" data-i18n="settingsChecking"></span></div>
+            <div class="safety-row"><span data-i18n="safetyDailyPnlDomestic"></span><span class="safety-badge" id="safety-daily-loss-domestic" data-i18n="settingsChecking"></span></div>
+            <div class="safety-row"><span data-i18n="safetyDailyPnlOverseas"></span><span class="safety-badge" id="safety-daily-loss-overseas" data-i18n="settingsChecking"></span></div>
+            <button type="button" class="safety-kill-btn" id="safety-kill-toggle" data-i18n="settingsChecking"></button>
+            <div class="order-result" id="safety-result" hidden></div>
+          </div>
+
+        <div class="panel tab-panel" id="tab-decisions" hidden>
+          <div id="decisions"><div class="empty" data-i18n="decisionsEmpty"></div></div>
+        </div>
+
+        <div class="panel tab-panel" id="tab-alerts" hidden>
+          <div id="alerts"><div class="empty" data-i18n="alertsEmpty"></div></div>
+        </div>
+  </div>
+      </div><!-- /nav-settings -->
+
+    </div><!-- /nav-panels -->
+    </div><!-- /main-col -->
+  </div><!-- /app-shell -->
+
+  <!-- SEMI_AUTO pending-order approval — a centered "please decide before
+       moving on" prompt for a new AI-proposed order, reusing the detail
+       modal's CSS. The only popup for this (no separate toast anymore —
+       a toast/modal pair for the same event was redundant and the toast's
+       plain-escaped reason text didn't render the decision markdown). -->
+  <div class="modal-backdrop" id="pending-approval-backdrop">
+    <div class="modal" id="pending-approval-modal" style="width:min(560px,100%)">
+      <div class="modal-head">
+        <div>
+          <div class="modal-name" id="pending-approval-ticker"></div>
+          <div class="modal-symbol" id="pending-approval-symbol"></div>
+        </div>
+      </div>
+      <div class="pending-approval-order-line" id="pending-approval-order"></div>
+      <div id="pending-approval-reason"></div>
+      <div class="pending-actions" style="margin-top:1.25rem">
+        <button type="button" id="pending-approval-approve-btn"></button>
+        <button type="button" id="pending-approval-reject-btn"></button>
+        <button type="button" id="pending-approval-later-btn"></button>
+      </div>
+      <div class="order-result" id="pending-approval-result" hidden></div>
+    </div>
+  </div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
