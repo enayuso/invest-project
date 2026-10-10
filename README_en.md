@@ -96,7 +96,8 @@ pipeline.sh          build & deploy script
 
 ## 5. Setup and usage
 
-Requirements: Python **3.12**, [uv](https://docs.astral.sh/uv/), Postgres 16 + pgvector (`DATABASE_URL` is
+Requirements (macOS): Python **3.12**, [uv](https://docs.astral.sh/uv/), Postgres 16 + pgvector
+(`brew install uv`, Postgres+pgvector via `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=... pgvector/pgvector:pg16`) (`DATABASE_URL` is
 required), an OpenAI-compatible LLM endpoint, and optionally KIS Open API keys (paper keys are enough).
 
 ```bash
@@ -133,14 +134,14 @@ uv run python -m app.backtest.screening_sweep   # LLM-free re-scoring of past sc
 
 ```bash
 # full regression in a single process with outbound network blocked (~2-4 min)
-uv run python -X utf8 scripts/run_protected_regression.py
-uv run python -X utf8 scripts/run_protected_regression.py -- tests/execution -q
+uv run python scripts/run_protected_regression.py
+uv run python scripts/run_protected_regression.py -- tests/execution -q
 
 # the MCP subproject has its own environment
 cd stock-advisor-mcp && uv run --extra dev pytest -q
 ```
 
-A few tests drive `pipeline.sh` and need bash ≥ 4 (macOS ships 3.2) and a git checkout.
+A few tests drive `pipeline.sh` and need bash ≥ 4 — on macOS, `brew install bash` (the system bash is 3.2).
 
 ### Deploy
 

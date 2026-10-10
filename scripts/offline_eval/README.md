@@ -1,5 +1,9 @@
 # Offline evaluation tool (Phase 3B–3D + OS-isolation launcher)
 
+> **Not part of the macOS setup.** This is a research tool from an earlier Windows development
+> environment: the launcher targets a Windows host and the paths below point at private evaluation
+> bundles that are not in this repository. It is kept for reference; nothing else in the project imports it.
+
 This directory is a standalone, Python-standard-library-only validator for the
 immutable Phase 2 evidence bundle. It does not import `app`, access a database or
 network, or execute an AI engine. Phase 3C can load only the hash-pinned

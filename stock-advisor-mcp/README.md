@@ -39,10 +39,10 @@ Run its tests from this folder only (`python -m pytest`).
 
 ### 1. Install
 
-```powershell
-cd <저장소 폴더>\stock-advisor-mcp      # 이 README가 있는 폴더
-python -m venv .venv                     # Python 3.12 이상
-.venv\Scripts\pip install -e ".[dev]"
+```bash
+cd <저장소 폴더>/stock-advisor-mcp      # 이 README가 있는 폴더
+python3 -m venv .venv                    # Python 3.12 이상
+.venv/bin/pip install -e ".[dev]"
 ```
 
 ### 2. Configure Claude Desktop
@@ -55,7 +55,7 @@ replace `<저장소 폴더>` with the full path of the repository folder
 {
   "mcpServers": {
     "stock-advisor-mcp": {
-      "command": "<저장소 폴더>\\stock-advisor-mcp\\.venv\\Scripts\\python.exe",
+      "command": "<저장소 폴더>/stock-advisor-mcp/.venv/bin/python",
       "args": ["-m", "stock_advisor_mcp.server"]
     }
   }
@@ -63,16 +63,15 @@ replace `<저장소 폴더>` with the full path of the repository folder
 ```
 
 This was verified directly before writing it down: running
-`<저장소 폴더>\stock-advisor-mcp\.venv\Scripts\python.exe -m stock_advisor_mcp.server`
+`<저장소 폴더>/stock-advisor-mcp/.venv/bin/python -m stock_advisor_mcp.server`
 (checked on 2026-09-21 at the previous location) with stdin closed starts the server and exits cleanly (exit code 0) —
 the expected behavior for a stdio MCP server with no client attached.
 
 Restart Claude Desktop after editing the config.
 
-### Where the config file lives (Windows)
+### Where the config file lives (macOS)
 
-`%APPDATA%\Claude\claude_desktop_config.json`, i.e.
-`C:\Users\<you>\AppData\Roaming\Claude\claude_desktop_config.json`.
+`~/Library/Application Support/Claude/claude_desktop_config.json`.
 Create the file (and the `mcpServers` key) if it doesn't exist yet.
 
 ## 사용법 — 분석 대본(`analysis_script`) 사용하는 두 가지 방법

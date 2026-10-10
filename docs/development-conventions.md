@@ -216,7 +216,7 @@ answers in that same language — restricted to exactly these two"""
 
 ## 5. 검증 관례
 
-- 전체 회귀는 외부망을 막은 단일 프로세스 도구로 돌린다: `.venv/Scripts/python.exe -X utf8 scripts/run_protected_regression.py`(저장소 폴더에서, 약 4분, `-n` 불가, 표적 실행은 `-- <pytest 인자>`, 결과는 저장소 밖 `<임시폴더>/invest-regression/<루트명>/<UTC>/`; 저장소 안 `--out`은 tmp_path 저장소 밖을 요구하는 일부 시험을 실패시킬 수 있다).
+- 전체 회귀는 외부망을 막은 단일 프로세스 도구로 돌린다: `uv run python scripts/run_protected_regression.py`(저장소 폴더에서, 약 4분, `-n` 불가, 표적 실행은 `-- <pytest 인자>`, 결과는 저장소 밖 `<임시폴더>/invest-regression/<루트명>/<UTC>/`; 저장소 안 `--out`은 tmp_path 저장소 밖을 요구하는 일부 시험을 실패시킬 수 있다).
 - 수정 직후 구문 검증을 먼저 한다 (`python -c "import ast; ast.parse(open(f).read())"` 류의
   패턴, JS라면 `new Function(...)`으로 파싱만 시도). 파일 저장 직후 습관적으로 거치는 1차
   검증 단계다.

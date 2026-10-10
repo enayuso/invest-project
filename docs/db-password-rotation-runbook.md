@@ -50,7 +50,7 @@ source IPs, or `pg_hba.conf` CIDR limits, or SSH-tunnel-only access.
    ```
    openssl rand -base64 96 | tr -dc 'A-Za-z0-9' | head -c 40; echo
    ```
-   (Do NOT use PowerShell `Get-Random` - not cryptographic.) **Never paste
+   (Use a cryptographic source like this, not a shell `$RANDOM`.) **Never paste
    the password into chat or a commit.** The operator generates and stores
    it in a password manager first.
 

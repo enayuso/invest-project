@@ -194,7 +194,7 @@ cp .env.example .env.local      # 값 채우기 — .env.example이 형식의 �
 
 - `.env.local`: 로컬 `uv run`용 · `.env.dev`: `pipeline.sh dev`용. **둘 다 gitignore 대상이다.**
 - 로컬 개발에는 **모의계좌 키만** 둔다. 실전 키는 개발 PC에 두지 않는다. 배포 시에는 CI(Jenkins)가 주입한다.
-- Windows에서는 `uv run` 대신 `.venv/Scripts/python.exe`를 직접 지정해도 된다. 시스템 Python에는 의존성이 없다.
+- macOS 기준이다(`brew install uv`, Postgres+pgvector는 `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=... pgvector/pgvector:pg16`). `uv run` 대신 `.venv/bin/python`을 직접 지정해도 된다. 시스템 Python에는 의존성이 없다.
 
 ### 실행
 
@@ -220,11 +220,11 @@ uv run python -m app.execution check-stops --ticker AAPL
 
 ### 테스트
 
-저장소 폴더에서 프로젝트 가상환경 Python으로 실행한다. 전체 회귀의 기본 명령은 **외부망을 차단하는 단일 프로세스 도구**다(약 4분, 병렬 `-n` 불가). Windows 출력 인코딩 오류를 피하려면 `-X utf8`을 붙인다.
+저장소 폴더에서 프로젝트 가상환경 Python으로 실행한다. 전체 회귀의 기본 명령은 **외부망을 차단하는 단일 프로세스 도구**다(약 4분, 병렬 `-n` 불가).
 
 ```bash
-.venv/Scripts/python.exe -X utf8 scripts/run_protected_regression.py
-.venv/Scripts/python.exe -X utf8 scripts/run_protected_regression.py -- tests/execution -q
+uv run python scripts/run_protected_regression.py
+uv run python scripts/run_protected_regression.py -- tests/execution -q
 ```
 
 기존 전체 병렬 pytest 안내는 위 명령으로 대체했다(2026-10-06). 차단은 해당 Python 프로세스의 DNS·소켓 연결에 적용되고, 자식 프로세스 생성은 기록만 한다. 모든 자식 프로그램의 외부 접근이나 DB 읽기 전용 세션을 보장하는 도구는 아니다.
